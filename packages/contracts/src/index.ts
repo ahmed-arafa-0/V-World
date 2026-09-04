@@ -1,3 +1,28 @@
-export type { MilestoneId, BackendEnvironment, HealthResponse } from './health.js';
+export type {
+  MilestoneId,
+  BackendEnvironment,
+  HealthResponse,
+  HealthSheetsStatus,
+  HealthSchemaStatus,
+  HealthCacheStatus,
+} from './health.js';
 export type { BackendConfigReason, BackendConfigStatus } from './config-status.js';
 export type { ApiErrorCode, ApiError } from './api-error.js';
+export type {
+  SchemaHealthStatus,
+  SchemaHealthSeverity,
+  SchemaHealthDiagnostic,
+  SchemaHealthTabSummary,
+  SchemaHealthSummary,
+  SchemaHealthResponse,
+} from './schema-health.js';
+export type {
+  BootstrapAppConfig,
+  BootstrapLanguage,
+  BootstrapLocation,
+  BootstrapStoryBeat,
+  BootstrapIcon,
+  BootstrapAssetDescriptor,
+  BootstrapEvent,
+  BootstrapResponse,
+} from './bootstrap.js';

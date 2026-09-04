@@ -17,7 +17,7 @@ test.describe('Mobile viewport', () => {
   test('Admin renders without horizontal overflow on a small screen', async ({ page }) => {
     await page.goto('/admin');
 
-    await expect(page.getByRole('heading', { name: 'Admin Foundation' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Admin Schema Health' })).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,

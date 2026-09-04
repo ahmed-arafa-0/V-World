@@ -1,28 +1,57 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { GOOD_WORKBOOK } from '@veoullas-world/test-fixtures';
 import { buildHealthResponse, resolveEnvironment } from '../src/api/health.js';
+import { SheetGateway } from '../src/repositories/sheet-gateway.js';
+import { FakeGoogleSheetsClient } from './helpers/fake-sheets-client.js';
+
+function makeGateway(): SheetGateway {
+  const client = new FakeGoogleSheetsClient(structuredClone(GOOD_WORKBOOK));
+  return new SheetGateway(client, { ttlSeconds: 60 });
+}
 
 describe('buildHealthResponse', () => {
-  it('returns structured JSON with a server-generated timestamp and milestone M00', () => {
+  it('reports a controlled sheets-unreachable status when no gateway is supplied', async () => {
     const before = Date.now();
-    const response = buildHealthResponse();
+    const response = await buildHealthResponse(null);
     const after = Date.now();
 
     expect(response.ok).toBe(true);
     expect(response.service).toBe('veoullas-world-functions');
-    expect(response.milestone).toBe('M00');
-    expect(response.config).toBeDefined();
+    expect(response.milestone).toBe('M01');
+    expect(response.sheets.reachable).toBe(false);
+    expect(response.schemaHealth.status).toBe('error');
+    expect(response.cache).toEqual({ entryCount: 0, ttlSeconds: 60 });
 
     const timestampMs = new Date(response.timestamp).getTime();
     expect(timestampMs).toBeGreaterThanOrEqual(before);
     expect(timestampMs).toBeLessThanOrEqual(after);
   });
 
-  it('keeps working when Google credentials are missing, with a controlled backend-only status', () => {
-    const response = buildHealthResponse();
+  it('reports the credential file status independently of the gateway (it reflects the real disk file)', async () => {
+    const response = await buildHealthResponse(null);
+    // This repository's config-private/google-service-account.json exists for
+    // M01 preflight — the credential-missing path itself is covered directly
+    // in google-credential-loader.test.ts using fixture directories.
+    expect(typeof response.config.googleServiceAccount.present).toBe('boolean');
+    expect(['not_configured', 'configured', 'invalid_format']).toContain(
+      response.config.googleServiceAccount.reason,
+    );
+  });
 
-    expect(response.ok).toBe(true);
-    expect(response.config.googleServiceAccount.present).toBe(false);
-    expect(response.config.googleServiceAccount.reason).toBe('not_configured');
+  it('reports sheets reachable and a schema-health summary when a working gateway is provided', async () => {
+    const response = await buildHealthResponse(makeGateway());
+
+    expect(response.sheets.reachable).toBe(true);
+    expect(['healthy', 'warning', 'error']).toContain(response.schemaHealth.status);
+    expect(response.cache.ttlSeconds).toBe(60);
+  });
+
+  it('never includes a service-account email, file path, or credential fragment', async () => {
+    const response = await buildHealthResponse(makeGateway());
+    const serialized = JSON.stringify(response);
+    expect(serialized).not.toMatch(/gserviceaccount\.com/);
+    expect(serialized).not.toContain('config-private');
+    expect(serialized).not.toContain('private_key');
   });
 });
 

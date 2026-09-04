@@ -7,20 +7,24 @@
   "workspaces": [
     "apps/web",
     "apps/functions",
-    "packages/contracts"
+    "packages/contracts",
+    "packages/sheet-schema",
+    "packages/test-fixtures"
   ],
   "scripts": {
     "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,css}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,mjs,json,md,css}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "lint": "eslint .",
-    "typecheck": "npm run build --workspace=packages/contracts && npm run typecheck --workspace=apps/functions && npm run typecheck --workspace=apps/web",
-    "build": "npm run build --workspace=packages/contracts && npm run build --workspace=apps/functions && npm run build --workspace=apps/web",
-    "test": "npm run build --workspace=packages/contracts && npm run test --workspace=apps/functions && npm run test --workspace=apps/web",
+    "build:libs": "npm run build --workspace=packages/contracts && npm run build --workspace=packages/sheet-schema && npm run build --workspace=packages/test-fixtures",
+    "typecheck": "npm run build:libs && npm run typecheck --workspace=apps/functions && npm run typecheck --workspace=apps/web",
+    "build": "npm run build:libs && npm run build --workspace=apps/functions && npm run build --workspace=apps/web",
+    "test": "npm run build:libs && npm run test --workspace=packages/sheet-schema && npm run test --workspace=apps/functions && npm run test --workspace=apps/web",
     "test:e2e": "playwright test",
+    "test:m01:live": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m01-live.mjs",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:functions": "npm run dev --workspace=apps/functions",
     "emulators": "firebase emulators:start --only hosting,functions",
-    "emulators:build": "npm run build --workspace=packages/contracts && npm run build --workspace=apps/web && npm run build --workspace=apps/functions && npm run emulators",
+    "emulators:build": "npm run build:libs && npm run build --workspace=apps/web && npm run build --workspace=apps/functions && npm run emulators",
     "security:scan": "node scripts/security-boundary-scan.mjs"
   },
   "devDependencies": {

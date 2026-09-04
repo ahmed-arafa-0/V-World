@@ -5,10 +5,20 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  // This suite calls the real Google Sheets API through the local emulator
+  // (no fakes in e2e). Cold Functions-emulator starts and live network
+  // round-trips are slower and less predictable than same-process unit
+  // tests, so we run serially with generous timeouts rather than racing
+  // multiple workers against one backend and a rate-limited external API.
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: process.env.CI ? 1 : 1,
   reporter: [['list']],
+  timeout: 30_000,
+  expect: {
+    timeout: 15_000,
+  },
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',

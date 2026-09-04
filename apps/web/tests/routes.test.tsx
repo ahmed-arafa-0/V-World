@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from '../src/app/AppRoutes';
+import { installMockFetch } from './helpers/mockApi';
 
 function renderAt(path: string) {
   return render(
@@ -15,34 +16,20 @@ function renderAt(path: string) {
 }
 
 beforeEach(() => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        ok: true,
-        service: 'veoullas-world-functions',
-        environment: 'local',
-        timestamp: new Date().toISOString(),
-        milestone: 'M00',
-        config: { googleServiceAccount: { present: false, reason: 'not_configured' } },
-      }),
-    }),
-  );
+  installMockFetch();
 });
 
 describe('AppRoutes', () => {
   it('renders the Home placeholder at /', async () => {
     renderAt('/');
     expect(await screen.findByRole('heading', { name: "Veoulla's World" })).toBeInTheDocument();
-    expect(screen.getByText('Foundation Build')).toBeInTheDocument();
-    expect(screen.getByText('M00')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument();
+    expect(screen.getByText('M01 — Google Sheets Gateway')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /admin schema health/i })).toBeInTheDocument();
   });
 
-  it('renders the Admin placeholder at /admin', async () => {
+  it('renders the Admin Schema Health page at /admin', async () => {
     renderAt('/admin');
-    expect(await screen.findByRole('heading', { name: 'Admin Foundation' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Admin Schema Health' })).toBeInTheDocument();
     expect(screen.getByText(/no authentication implemented yet/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument();
   });

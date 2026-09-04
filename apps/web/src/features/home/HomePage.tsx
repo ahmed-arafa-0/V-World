@@ -1,19 +1,17 @@
 import { Link } from 'react-router-dom';
 import { BackendStatus } from '../../components/BackendStatus';
+import { BootstrapSummary } from '../../components/BootstrapSummary';
 import styles from './HomePage.module.css';
 
 export function HomePage() {
   return (
     <div className={styles.page}>
       <h1>Veoulla&apos;s World</h1>
-      <p className={styles.subtitle}>Foundation Build</p>
-      <p className={styles.milestone}>M00</p>
-      <p className={styles.status} role="status">
-        Frontend status: online
-      </p>
+      <p className={styles.subtitle}>M01 — Google Sheets Gateway</p>
       <BackendStatus />
+      <BootstrapSummary />
       <nav className={styles.nav} aria-label="Primary">
-        <Link to="/admin">Go to Admin placeholder</Link>
+        <Link to="/admin">Go to Admin Schema Health</Link>
       </nav>
     </div>
   );

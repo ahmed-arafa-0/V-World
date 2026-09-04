@@ -8,6 +8,7 @@
   --accent-muted: #e8ddf0;
   --accent-contrast: #2c1f3a;
   --status-online: #2f7a4f;
+  --status-warning: #9a6b1a;
   --status-offline: #a13b3b;
 }
 
@@ -21,6 +22,7 @@
     --accent-muted: #3d2f4c;
     --accent-contrast: #f2eef6;
     --status-online: #7fd6a0;
+    --status-warning: #e0b862;
     --status-offline: #ef8b8b;
   }
 }

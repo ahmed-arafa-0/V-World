@@ -1,0 +1,57 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  background: var(--surface);
+  font-size: 0.85rem;
+  text-align: start;
+}
+
+.badge {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+}
+
+.error .badge {
+  color: var(--status-offline);
+}
+
+.warning .badge {
+  color: var(--status-warning);
+}
+
+.info .badge {
+  color: var(--text-muted);
+}
+
+.tab {
+  font-weight: 600;
+}
+
+.column {
+  color: var(--text-muted);
+}
+
+.message {
+  color: var(--text);
+}
+
+.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}

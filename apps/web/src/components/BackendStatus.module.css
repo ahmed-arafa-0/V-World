@@ -1,5 +1,17 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
 .online {
   color: var(--status-online);
+  font-weight: 600;
+}
+
+.warning {
+  color: var(--status-warning);
   font-weight: 600;
 }
 

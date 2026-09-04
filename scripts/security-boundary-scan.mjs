@@ -18,6 +18,11 @@ const FORBIDDEN_PATTERNS = [
   'private_key',
   'private_key_id',
   'BEGIN PRIVATE KEY',
+  'client_email',
+  'gate_code_plaintext',
+  'admin_password_plaintext',
+  'plaintext_value',
+  'AUTHORIZATION_KEY',
   'GEMINI_API_KEY',
   '@veoullas-world/functions',
 ];

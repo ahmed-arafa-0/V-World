@@ -17,10 +17,30 @@ export function BackendStatus() {
     );
   }
 
+  const { data } = health;
+
   return (
-    <p className={styles.online} role="status">
-      Backend status: {health.data.ok ? 'online' : 'error'} · milestone {health.data.milestone} ·{' '}
-      {health.data.environment}
-    </p>
+    <div className={styles.group}>
+      <p className={styles.online} role="status">
+        Backend status: {data.ok ? 'online' : 'error'} · milestone {data.milestone} ·{' '}
+        {data.environment}
+      </p>
+      <p className={data.sheets.reachable ? styles.online : styles.offline} role="status">
+        Google Sheet connection: {data.sheets.reachable ? 'connected' : 'unreachable'}
+      </p>
+      <p className={styles[schemaStatusClass(data.schemaHealth.status)]} role="status">
+        Schema health: {data.schemaHealth.status} ({data.schemaHealth.errorCount} error
+        {data.schemaHealth.errorCount === 1 ? '' : 's'}, {data.schemaHealth.warningCount} warning
+        {data.schemaHealth.warningCount === 1 ? '' : 's'})
+      </p>
+    </div>
   );
+}
+
+function schemaStatusClass(
+  status: 'healthy' | 'warning' | 'error',
+): 'online' | 'warning' | 'offline' {
+  if (status === 'healthy') return 'online';
+  if (status === 'warning') return 'warning';
+  return 'offline';
 }

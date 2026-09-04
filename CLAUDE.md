@@ -17,7 +17,7 @@ Never copy or revive behavior, code, or design decisions from an older Veoulla p
 
 ## 3. One milestone at a time
 
-Implement only the milestone you were asked to implement. Never start a future milestone (M01+) early, even partially, even as "preparation." If foundation work for a later milestone seems convenient now, don't — flag it instead.
+Implement only the milestone you were asked to implement. Never start a future milestone (M02+) early, even partially, even as "preparation." If foundation work for a later milestone seems convenient now, don't — flag it instead.
 
 ## 4. Google Sheets is authoritative
 
@@ -82,12 +82,15 @@ Save it to `docs/reports/M<NN>_EVIDENCE.md`, containing: changed files, commands
 ## Quick reference: repository shape
 
 - `apps/web` — React + Vite + TypeScript frontend.
-- `apps/functions` — Firebase Functions TypeScript backend (Express app behind one HTTPS function).
-- `apps/functions/config-private` — server-only credentials; never committed, never imported by `apps/web`.
-- `packages/contracts` — TypeScript types shared between frontend and backend.
+- `apps/functions` — Firebase Functions TypeScript backend (Express app behind one HTTPS function). Owns the Google Sheets gateway, schema-health service, bootstrap service, and backend-only secrets repository.
+- `apps/functions/config-private` — server-only credentials (`google-service-account.json`); never committed, never imported by `apps/web`.
+- `packages/contracts` — TypeScript types shared between frontend and backend (health, bootstrap, schema-health, API errors).
+- `packages/sheet-schema` — the 42-tab registry: typed column definitions, normalization, relationships, and the 00_README dashboard parser.
+- `packages/test-fixtures` — deterministic mock workbook fixtures (`GOOD_WORKBOOK`, `BROKEN_WORKBOOK`) used by unit tests; never real data.
 - `docs/` — Living Bible, Master Build Plan, Sheets blueprint, evidence reports.
-- `tests/e2e` — Playwright end-to-end tests.
+- `tests/e2e` — Playwright end-to-end tests (run against the real Sheet via the local emulator).
+- `scripts/test-m01-live.mjs` — manually invoked live verification (`npm run test:m01:live`); never run as part of `npm run test`.
 
 ## Quick reference: current milestone
 
-**M00 — Project Foundation** is the only milestone implemented so far. See `docs/reports/M00_EVIDENCE.md` for its evidence report. Do not build Gate, island, Map, buildings, characters, birthday event, VAR, Marcelino, or real Admin controls until their milestone is explicitly requested and M00 has been accepted.
+**M01 — Google Sheets Gateway and Schema Health** is the latest accepted milestone. See `docs/reports/M01_EVIDENCE.md` (and `docs/reports/M00_EVIDENCE.md` for the foundation). Do not build the Gate, island, Map, buildings, characters, birthday event, VAR/Gemini, Marcelino, sessions/IP logging, player progress writes, or real Admin authentication until their milestone is explicitly requested and M01 has been accepted. The Admin Schema Health route is intentionally unauthenticated and read-only pending M02.

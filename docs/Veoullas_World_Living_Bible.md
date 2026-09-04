@@ -114,12 +114,13 @@
 **Completed**
 
 - A concrete import-ready workbook has been created as **Veoullas_World_Google_Sheets_Blueprint.xlsx**.
-- The workbook contains 40 organized tabs covering:
+- The workbook contains 42 organized tabs covering:
   - app configuration, users, temporary plaintext secrets, Admin flags, entry/IP logs, and sessions;
   - supported languages, localized UI text, icons, assets, locations, and scenes;
   - routes, 18 first-journey beats, dialogue, five-language voice-over, events, and birthday phases;
   - messages, songs, key catalog/rules, achievements, and all per-user progress/state tables;
   - Farm, Church, VARcade, Everkeep, VAR, and Marcelino configuration/state;
+  - the append-only VAR conversation archive and durable cross-session VAR memories (`40_VAR_CONVERSATIONS`, `41_VAR_MEMORIES`);
   - a full data dictionary and central validation lists.
 - The workbook includes sample IDs/rows, placeholders, formulas, table filters, frozen headers, validations, enabled-state highlighting, and a visible red `DEV_ONLY` plaintext credential warning.
 - `24_PLAYER_PROGRESS` is the authoritative story/checkpoint record.

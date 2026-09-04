@@ -216,7 +216,7 @@ Every milestone must satisfy all applicable items:
 **Build**
 
 - Import the workbook into one private Google Sheet.
-- Implement typed contracts for all 40 tabs.
+- Implement typed contracts for all 42 tabs.
 - Implement cached reads, primary-key update, append, batch read, and idempotent mutation helpers.
 - Add schema validation, duplicate-ID checks, invalid-reference diagnostics, and Admin-readable health output.
 - Read prototype plaintext service values only on the backend.

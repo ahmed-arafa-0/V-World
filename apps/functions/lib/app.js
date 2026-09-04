@@ -1,11 +1,17 @@
 import cors from 'cors';
 import express from 'express';
-import { healthHandler } from './api/health.js';
-export function createApp() {
+import { createBootstrapHandler } from './api/bootstrap.js';
+import { createHealthHandler } from './api/health.js';
+import { createSchemaHealthHandler } from './api/schema-health.js';
+import { getProductionGatewayOrNull } from './repositories/gateway-context.js';
+export function createApp(options) {
+    const getGateway = options?.getGateway ?? getProductionGatewayOrNull;
     const app = express();
     app.use(cors());
     app.use(express.json());
-    app.get('/api/health', healthHandler);
+    app.get('/api/health', createHealthHandler(getGateway));
+    app.get('/api/bootstrap', createBootstrapHandler(getGateway));
+    app.get('/api/admin/schema-health', createSchemaHealthHandler(getGateway));
     app.use((req, res) => {
         const notFound = {
             ok: false,

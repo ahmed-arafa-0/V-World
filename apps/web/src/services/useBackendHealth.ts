@@ -1,22 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { fetchBackendHealth, type HealthCheckResult } from './healthClient';
+import { useApiResource } from './useApiResource';
 
 export function useBackendHealth(): HealthCheckResult {
-  const [result, setResult] = useState<HealthCheckResult>({ status: 'loading' });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchBackendHealth().then((next) => {
-      if (!cancelled) {
-        setResult(next);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return result;
+  const fetcher = useCallback(() => fetchBackendHealth(), []);
+  const { state } = useApiResource(fetcher);
+  return state;
 }

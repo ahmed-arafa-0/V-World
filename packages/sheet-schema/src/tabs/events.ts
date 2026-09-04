@@ -1,0 +1,52 @@
+import type { TableTabDefinition } from '../types.js';
+import { c } from './column-helper.js';
+
+export const EVENT_TABS: TableTabDefinition[] = [
+  {
+    name: '17_EVENTS',
+    kind: 'table',
+    purpose: 'Scheduled world events and one-time story routes.',
+    primaryKey: 'event_id',
+    columns: [
+      c('event_id', 'id'),
+      c('event_name', 'text'),
+      c('event_type', 'text'),
+      c('target_at', 'date'),
+      c('time_zone', 'text'),
+      c('start_at', 'date'),
+      c('end_at', 'date'),
+      c('enabled', 'boolean'),
+      c('story_route_id', 'id'),
+      c('force_flag_id', 'text'),
+      c('replay_allowed', 'boolean'),
+      c('notes', 'text'),
+    ],
+    sensitivity: 'Internal',
+    readBy: 'React via backend',
+    writeBy: 'Admin or backend',
+    adminEditable: true,
+  },
+  {
+    name: '18_EVENT_PHASES',
+    kind: 'table',
+    purpose: 'Time-offset phases controlling birthday visuals, content, and behavior.',
+    primaryKey: 'phase_id',
+    columns: [
+      c('phase_id', 'id'),
+      c('event_id', 'id'),
+      c('sequence', 'integer'),
+      c('start_offset_minutes', 'integer'),
+      c('end_offset_minutes', 'integer'),
+      c('phase_name', 'text'),
+      c('visual_theme_id', 'text'),
+      c('music_asset_id', 'id'),
+      c('voiceover_group_id', 'text'),
+      c('enabled', 'boolean'),
+      c('notes', 'text'),
+    ],
+    sensitivity: 'Internal',
+    readBy: 'React via backend',
+    writeBy: 'Admin or backend',
+    adminEditable: true,
+  },
+];
