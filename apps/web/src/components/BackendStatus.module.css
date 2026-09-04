@@ -1,0 +1,9 @@
+.online {
+  color: var(--status-online);
+  font-weight: 600;
+}
+
+.offline {
+  color: var(--status-offline);
+  font-weight: 600;
+}

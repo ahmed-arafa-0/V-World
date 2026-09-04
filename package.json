@@ -1,0 +1,42 @@
+{
+  "name": "veoullas-world",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Veoulla's World monorepo root (M00 foundation)",
+  "workspaces": [
+    "apps/web",
+    "apps/functions",
+    "packages/contracts"
+  ],
+  "scripts": {
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,css}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,mjs,json,md,css}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "lint": "eslint .",
+    "typecheck": "npm run build --workspace=packages/contracts && npm run typecheck --workspace=apps/functions && npm run typecheck --workspace=apps/web",
+    "build": "npm run build --workspace=packages/contracts && npm run build --workspace=apps/functions && npm run build --workspace=apps/web",
+    "test": "npm run build --workspace=packages/contracts && npm run test --workspace=apps/functions && npm run test --workspace=apps/web",
+    "test:e2e": "playwright test",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:functions": "npm run dev --workspace=apps/functions",
+    "emulators": "firebase emulators:start --only hosting,functions",
+    "emulators:build": "npm run build --workspace=packages/contracts && npm run build --workspace=apps/web && npm run build --workspace=apps/functions && npm run emulators",
+    "security:scan": "node scripts/security-boundary-scan.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.11.0",
+    "@playwright/test": "^1.47.0",
+    "eslint": "^9.11.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "firebase-tools": "^13.24.0",
+    "globals": "^15.9.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.8.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

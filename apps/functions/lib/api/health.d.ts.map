@@ -1,0 +1,1 @@
+{"version":3,"file":"health.d.ts","sourceRoot":"","sources":["../../src/api/health.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AACjD,OAAO,KAAK,EAAE,kBAAkB,EAAE,cAAc,EAAE,MAAM,2BAA2B,CAAC;AAKpF,wBAAgB,kBAAkB,IAAI,kBAAkB,CAQvD;AAED,wBAAgB,mBAAmB,IAAI,cAAc,CAWpD;AAED,wBAAgB,aAAa,CAAC,IAAI,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ,GAAG,IAAI,CAEhE"}

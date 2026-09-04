@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+lib
+coverage
+playwright-report
+test-results
+.firebase
+
+# Pre-existing user-authored product documents — not reformatted by tooling.
+docs/Veoullas_World_Living_Bible.md
+docs/Claude_Code_Master_Build_Plan.md
+
+# Intentionally malformed JSON fixture used to test error handling.
+apps/functions/tests/fixtures/invalid-json/google-service-account.json

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment / secrets (never commit)
+.env
+.env.*
+!.env.example
+apps/functions/config-private/google-service-account.json
+apps/functions/config-private/*.json
+!apps/functions/config-private/README.md
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+*-debug.log
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
