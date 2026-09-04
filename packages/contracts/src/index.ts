@@ -7,7 +7,7 @@ export type {
   HealthCacheStatus,
 } from './health.js';
 export type { BackendConfigReason, BackendConfigStatus } from './config-status.js';
-export type { ApiErrorCode, ApiError } from './api-error.js';
+export type { ApiErrorCode, AccessErrorCode, ApiError } from './api-error.js';
 export type {
   SchemaHealthStatus,
   SchemaHealthSeverity,
@@ -26,3 +26,27 @@ export type {
   BootstrapEvent,
   BootstrapResponse,
 } from './bootstrap.js';
+export type {
+  SessionKind,
+  SessionStatus,
+  SafeSessionSummary,
+  RateLimitState,
+  RateLimitedResponse,
+  GateLoginRequest,
+  GateLoginSuccess,
+  GateLoginFailure,
+  GateLoginResult,
+  AdminLoginRequest,
+  AdminLoginSuccess,
+  AdminLoginFailure,
+  AdminLoginResult,
+  SessionResumeRequest,
+  SessionLifecycleFailure,
+  SessionResumeResult,
+  SessionHeartbeatRequest,
+  SessionHeartbeatResult,
+  SessionLogoutRequest,
+  SessionLogoutResult,
+  PageOpenEvent,
+  PageOpenResult,
+} from './access.js';

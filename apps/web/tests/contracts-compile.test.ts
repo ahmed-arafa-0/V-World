@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import type {
+  AdminLoginRequest,
+  AdminLoginResult,
   ApiError,
   BackendConfigStatus,
   BootstrapResponse,
+  GateLoginRequest,
+  GateLoginResult,
   HealthResponse,
+  PageOpenEvent,
+  RateLimitedResponse,
+  SafeSessionSummary,
   SchemaHealthResponse,
+  SessionHeartbeatResult,
+  SessionLogoutResult,
+  SessionResumeResult,
 } from '@veoullas-world/contracts';
 
 describe('shared contracts compile and are usable from the frontend', () => {
@@ -77,5 +87,98 @@ describe('shared contracts compile and are usable from the frontend', () => {
     };
 
     expect(schemaHealth.summary.expectedTabCount).toBe(42);
+  });
+
+  it('builds a valid SafeSessionSummary using the shared type (never a Gate code or password)', () => {
+    const session: SafeSessionSummary = {
+      sessionId: 'sess_test',
+      kind: 'owner',
+      userId: 'veoulla',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
+    };
+
+    expect(session.kind).toBe('owner');
+    expect(Object.keys(session)).not.toContain('gateCode');
+    expect(Object.keys(session)).not.toContain('password');
+  });
+
+  it('builds a valid GateLoginRequest/GateLoginResult pair using the shared types', () => {
+    const request: GateLoginRequest = { code: '1234', deviceId: 'device_1', language: 'en' };
+    const success: GateLoginResult = {
+      ok: true,
+      session: {
+        sessionId: 'sess_test',
+        kind: 'owner',
+        userId: 'veoulla',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date().toISOString(),
+        lastSeenAt: new Date().toISOString(),
+      },
+    };
+    const failure: GateLoginResult = { ok: false, code: 'INVALID_GATE_CODE', message: 'nope' };
+    const rateLimited: GateLoginResult = {
+      ok: false,
+      code: 'RATE_LIMITED',
+      message: 'nope',
+      rateLimit: {
+        maxAttempts: 5,
+        remainingAttempts: 0,
+        cooldownSeconds: 10,
+        cooldownEndsAt: null,
+      },
+    };
+
+    expect(request.code).toBe('1234');
+    expect(success.ok).toBe(true);
+    expect(failure.ok).toBe(false);
+    expect(rateLimited.ok).toBe(false);
+  });
+
+  it('builds a valid AdminLoginRequest/AdminLoginResult pair using the shared types', () => {
+    const request: AdminLoginRequest = { username: 'admin_ahmed', password: 'not-real' };
+    const result: AdminLoginResult = {
+      ok: false,
+      code: 'INVALID_ADMIN_CREDENTIALS',
+      message: 'nope',
+    };
+
+    expect(request.username).toBe('admin_ahmed');
+    expect(result.ok).toBe(false);
+  });
+
+  it('builds valid session lifecycle results using the shared types', () => {
+    const resume: SessionResumeResult = { ok: false, code: 'SESSION_EXPIRED', message: 'nope' };
+    const heartbeat: SessionHeartbeatResult = {
+      ok: false,
+      code: 'SESSION_TERMINATED',
+      message: 'nope',
+    };
+    const logout: SessionLogoutResult = { ok: true };
+
+    expect(resume.ok).toBe(false);
+    expect(heartbeat.ok).toBe(false);
+    expect(logout.ok).toBe(true);
+  });
+
+  it('builds a valid PageOpenEvent and RateLimitedResponse using the shared types', () => {
+    const pageOpen: PageOpenEvent = { language: 'en', route: '/', deviceId: 'device_1' };
+    const rateLimited: RateLimitedResponse = {
+      ok: false,
+      code: 'RATE_LIMITED',
+      message: 'nope',
+      rateLimit: {
+        maxAttempts: 3,
+        remainingAttempts: 0,
+        cooldownSeconds: 30,
+        cooldownEndsAt: null,
+      },
+    };
+
+    expect(pageOpen.language).toBe('en');
+    expect(rateLimited.rateLimit.maxAttempts).toBe(3);
   });
 });

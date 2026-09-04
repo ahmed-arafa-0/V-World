@@ -14,7 +14,24 @@ export type ApiErrorCode =
   | 'DUPLICATE_PRIMARY_KEY'
   | 'ROW_NOT_FOUND'
   | 'INVALID_REFERENCE'
-  | 'SHEET_WRITE_CONFLICT';
+  | 'SHEET_WRITE_CONFLICT'
+  | AccessErrorCode;
+
+/**
+ * Safe access/session error codes (M02). Never accompanied by a Gate code,
+ * Admin password, session token contents, or any other access value — only
+ * this typed code and a generic, non-identifying message.
+ */
+export type AccessErrorCode =
+  | 'INVALID_GATE_CODE'
+  | 'INVALID_ADMIN_CREDENTIALS'
+  | 'RATE_LIMITED'
+  | 'SESSION_REQUIRED'
+  | 'SESSION_EXPIRED'
+  | 'SESSION_TERMINATED'
+  | 'SESSION_INVALID'
+  | 'ACCESS_CONFIG_INVALID'
+  | 'ACCESS_SERVICE_UNAVAILABLE';
 
 /** Structured error shape returned by backend endpoints instead of raw provider errors. */
 export interface ApiError {

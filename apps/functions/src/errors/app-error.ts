@@ -31,10 +31,22 @@ function httpStatusForCode(code: ApiErrorCode): number {
     case 'SHEET_UNAVAILABLE':
       return 503;
     case 'SHEET_RATE_LIMITED':
+    case 'RATE_LIMITED':
       return 429;
     case 'DUPLICATE_PRIMARY_KEY':
     case 'SHEET_WRITE_CONFLICT':
       return 409;
+    case 'INVALID_GATE_CODE':
+    case 'INVALID_ADMIN_CREDENTIALS':
+    case 'SESSION_REQUIRED':
+    case 'SESSION_EXPIRED':
+    case 'SESSION_TERMINATED':
+    case 'SESSION_INVALID':
+      return 401;
+    case 'ACCESS_CONFIG_INVALID':
+      return 500;
+    case 'ACCESS_SERVICE_UNAVAILABLE':
+      return 503;
     case 'internal_error':
     default:
       return 500;
