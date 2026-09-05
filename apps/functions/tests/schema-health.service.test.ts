@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GOOD_WORKBOOK, BROKEN_WORKBOOK } from '@veoullas-world/test-fixtures';
+import { GOOD_WORKBOOK, BROKEN_WORKBOOK, buildM02Workbook } from '@veoullas-world/test-fixtures';
 import { computeSchemaHealth } from '../src/services/schema-health.service.js';
 import { SheetGateway } from '../src/repositories/sheet-gateway.js';
 import { FakeGoogleSheetsClient } from './helpers/fake-sheets-client.js';
@@ -116,5 +116,40 @@ describe('computeSchemaHealth — broken workbook', () => {
           d.code === 'INVALID_REFERENCE' && d.tab === '22_KEY_RULES' && d.column === 'key_type_id',
       ),
     ).toBe(true);
+  });
+});
+
+describe('05_ENTRY_LOGS.event_type is wired to the entry_event_type controlled list', () => {
+  it('does not flag any of the 11 accepted event_type values used by the M02 fixture', async () => {
+    const health = await computeSchemaHealth(gatewayFor(buildM02Workbook()));
+    const eventTypeIssues = health.diagnostics.filter(
+      (d) => d.tab === '05_ENTRY_LOGS' && d.code === 'INVALID_CONTROLLED_VALUE',
+    );
+    expect(eventTypeIssues).toHaveLength(0);
+  });
+
+  it('flags an event_type value that is not in the accepted entry_event_type list', async () => {
+    const workbook = buildM02Workbook();
+    const header = workbook['05_ENTRY_LOGS']![0]!;
+    const eventTypeIdx = header.indexOf('event_type');
+    workbook['05_ENTRY_LOGS']![1]![eventTypeIdx] = 'not_a_real_event_type';
+
+    const health = await computeSchemaHealth(gatewayFor(workbook));
+    expect(
+      health.diagnostics.some(
+        (d) =>
+          d.code === 'INVALID_CONTROLLED_VALUE' &&
+          d.tab === '05_ENTRY_LOGS' &&
+          d.column === 'event_type',
+      ),
+    ).toBe(true);
+  });
+
+  it('a workbook whose 39_VALIDATION_LISTS has no entry_event_type rows at all (e.g. GOOD_WORKBOOK) is unaffected — the check only activates once the list exists', async () => {
+    const health = await computeSchemaHealth(gatewayFor(GOOD_WORKBOOK));
+    const eventTypeIssues = health.diagnostics.filter(
+      (d) => d.tab === '05_ENTRY_LOGS' && d.code === 'INVALID_CONTROLLED_VALUE',
+    );
+    expect(eventTypeIssues).toHaveLength(0);
   });
 });

@@ -33,14 +33,45 @@ test.describe('Network response security boundary', () => {
     expect(text).not.toMatch(/"driveFileId"/);
   });
 
-  test('GET /api/admin/schema-health never leaks credential, secret, or raw row content', async ({
+  test('GET /api/admin/schema-health (unauthenticated, 401) never leaks credential, secret, or raw row content', async ({
     page,
   }) => {
     const response = await page.request.get('/api/admin/schema-health');
-    expect(response.ok()).toBe(true);
+    expect(response.status()).toBe(401);
     const text = await response.text();
     for (const pattern of FORBIDDEN_PATTERNS) {
       expect(text).not.toContain(pattern);
     }
+  });
+
+  test('Gate/Admin login responses never leak the correct code/password on failure', async ({
+    page,
+  }) => {
+    const gateResponse = await page.request.post('/api/auth/gate', {
+      data: {
+        digits: ['0', '0', '0', '0'],
+        deviceId: 'net-sec-test-device',
+        attemptId: `net-sec-gate-${Date.now()}`,
+      },
+    });
+    const gateText = await gateResponse.text();
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      expect(gateText).not.toContain(pattern);
+    }
+    expect(gateText).not.toMatch(/"sessionId"/);
+
+    const adminResponse = await page.request.post('/api/auth/admin', {
+      data: {
+        username: 'admin_ahmed',
+        password: 'deliberately-wrong',
+        deviceId: 'net-sec-test-device',
+        attemptId: `net-sec-admin-${Date.now()}`,
+      },
+    });
+    const adminText = await adminResponse.text();
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      expect(adminText).not.toContain(pattern);
+    }
+    expect(adminText).not.toMatch(/"sessionId"/);
   });
 });

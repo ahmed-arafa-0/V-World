@@ -94,7 +94,7 @@ export const SYSTEM_CONFIG_TABS: TableTabDefinition[] = [
       c('timestamp', 'date'),
       c('user_id', 'id'),
       c('session_id', 'id'),
-      c('event_type', 'text'),
+      c('event_type', 'text', { controlledList: 'entry_event_type' }),
       c('access_result', 'text'),
       c('ip_address', 'text', { sensitive: true }),
       c('user_agent', 'text'),

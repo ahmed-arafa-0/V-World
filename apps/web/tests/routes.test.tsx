@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from '../src/app/AppRoutes';
 import { installMockFetch } from './helpers/mockApi';
 
 function renderAt(path: string) {
+  installMockFetch();
   return render(
     <MemoryRouter
       initialEntries={[path]}
@@ -15,23 +16,17 @@ function renderAt(path: string) {
   );
 }
 
-beforeEach(() => {
-  installMockFetch();
-});
-
 describe('AppRoutes', () => {
-  it('renders the Home placeholder at /', async () => {
+  it('renders the Gate at /', async () => {
     renderAt('/');
     expect(await screen.findByRole('heading', { name: "Veoulla's World" })).toBeInTheDocument();
-    expect(screen.getByText('M01 — Google Sheets Gateway')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /admin schema health/i })).toBeInTheDocument();
+    expect(await screen.findByRole('group', { name: /four-digit gate code/i })).toBeInTheDocument();
   });
 
-  it('renders the Admin Schema Health page at /admin', async () => {
+  it('renders the Admin login form at /admin', async () => {
     renderAt('/admin');
-    expect(await screen.findByRole('heading', { name: 'Admin Schema Health' })).toBeInTheDocument();
-    expect(screen.getByText(/no authentication implemented yet/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Admin' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
   });
 
   it('renders the not-found placeholder for an unknown route', () => {

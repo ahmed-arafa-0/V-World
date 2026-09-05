@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 import type {
   BootstrapResponse,
   HealthResponse,
+  SafeSessionSummary,
   SchemaHealthResponse,
 } from '@veoullas-world/contracts';
 
@@ -97,24 +98,111 @@ export const SAMPLE_SCHEMA_HEALTH_RESPONSE: SchemaHealthResponse = {
       message: 'Column "drive_file_id" still contains an un-replaced placeholder value.',
     },
   ],
-  note: 'This endpoint is temporary and must be protected by Admin authentication starting M02.',
+  note: 'This endpoint returns only sanitized structural diagnostics and requires an authenticated Admin session.',
 };
 
-function jsonResponse(body: unknown) {
-  return { ok: true, json: async () => body };
+export const SAMPLE_OWNER_SESSION: SafeSessionSummary = {
+  kind: 'owner',
+  userId: 'veoulla',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  expiresAt: '2026-01-02T00:00:00.000Z',
+  lastSeenAt: '2026-01-01T00:00:00.000Z',
+};
+
+export const SAMPLE_ADMIN_SESSION: SafeSessionSummary = {
+  kind: 'admin',
+  userId: 'admin_ahmed',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  expiresAt: '2026-01-01T02:00:00.000Z',
+  lastSeenAt: '2026-01-01T00:00:00.000Z',
+};
+
+function jsonResponse(body: unknown, httpOk = true) {
+  return { ok: httpOk, json: async () => body };
 }
 
-/** Routes a mocked global.fetch by URL to the matching canned response. */
-export function installMockFetch(): void {
+export interface MockFetchOptions {
+  /** Whether GET /api/session/owner should report an already-active session. Defaults to unauthenticated. */
+  ownerSession?: 'authenticated' | 'unauthenticated';
+  /** Whether GET /api/session/admin should report an already-active session. Defaults to unauthenticated. */
+  adminSession?: 'authenticated' | 'unauthenticated';
+  /** Overrides the result of the next POST /api/auth/gate call. Defaults to success. */
+  gateLoginResult?: unknown;
+  /** Overrides the result of the next POST /api/auth/admin call. Defaults to success. */
+  adminLoginResult?: unknown;
+}
+
+/**
+ * Routes a mocked global.fetch by method + URL to the matching canned
+ * response. Tracks a small in-memory "is this kind currently logged in"
+ * flag per session kind so a fresh login/logout inside one test flows
+ * naturally into subsequent resume/heartbeat/schema-health calls, the same
+ * way the real HttpOnly cookie would.
+ */
+export function installMockFetch(options: MockFetchOptions = {}): void {
+  let ownerLoggedIn = options.ownerSession === 'authenticated';
+  let adminLoggedIn = options.adminSession === 'authenticated';
+
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (input: RequestInfo | URL) => {
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.toString();
+      const method = (init?.method ?? 'GET').toUpperCase();
+
       if (url.startsWith('/api/health')) return jsonResponse(HEALTHY_HEALTH_RESPONSE);
       if (url.startsWith('/api/bootstrap')) return jsonResponse(SAMPLE_BOOTSTRAP_RESPONSE);
-      if (url.startsWith('/api/admin/schema-health'))
+      if (url.startsWith('/api/admin/schema-health')) {
+        if (!adminLoggedIn) {
+          return jsonResponse({ ok: false, code: 'SESSION_REQUIRED', message: 'nope' }, false);
+        }
         return jsonResponse(SAMPLE_SCHEMA_HEALTH_RESPONSE);
-      throw new Error(`Unmocked fetch URL in test: ${url}`);
+      }
+
+      if (url.startsWith('/api/access/page-open') && method === 'POST') {
+        return jsonResponse({ ok: true, logId: 'log_test_pageopen' });
+      }
+
+      if (url.startsWith('/api/session/owner/heartbeat') && method === 'POST') {
+        return jsonResponse({ ok: true, session: SAMPLE_OWNER_SESSION });
+      }
+      if (url.startsWith('/api/session/admin/heartbeat') && method === 'POST') {
+        return jsonResponse({ ok: true, session: SAMPLE_ADMIN_SESSION });
+      }
+
+      if (url.startsWith('/api/session/owner') && method === 'GET') {
+        return ownerLoggedIn
+          ? jsonResponse({ ok: true, session: SAMPLE_OWNER_SESSION })
+          : jsonResponse({ ok: false, code: 'SESSION_REQUIRED', message: 'nope' });
+      }
+      if (url.startsWith('/api/session/admin') && method === 'GET') {
+        return adminLoggedIn
+          ? jsonResponse({ ok: true, session: SAMPLE_ADMIN_SESSION })
+          : jsonResponse({ ok: false, code: 'SESSION_REQUIRED', message: 'nope' });
+      }
+
+      if (url.startsWith('/api/session/owner') && method === 'DELETE') {
+        ownerLoggedIn = false;
+        return jsonResponse({ ok: true });
+      }
+      if (url.startsWith('/api/session/admin') && method === 'DELETE') {
+        adminLoggedIn = false;
+        return jsonResponse({ ok: true });
+      }
+
+      if (url === '/api/auth/gate' && method === 'POST') {
+        const result = options.gateLoginResult ?? { ok: true, session: SAMPLE_OWNER_SESSION };
+        if ((result as { ok?: boolean }).ok) ownerLoggedIn = true;
+        return jsonResponse(result);
+      }
+      if (url === '/api/auth/admin' && method === 'POST') {
+        const result = options.adminLoginResult ?? { ok: true, session: SAMPLE_ADMIN_SESSION };
+        if ((result as { ok?: boolean }).ok) adminLoggedIn = true;
+        return jsonResponse(result);
+      }
+
+      throw new Error(`Unmocked fetch URL in test: ${method} ${url}`);
     }),
   );
 }

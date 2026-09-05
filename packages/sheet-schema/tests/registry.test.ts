@@ -89,6 +89,14 @@ describe('tab registry', () => {
     }
   });
 
+  it('wires 05_ENTRY_LOGS.event_type to the entry_event_type controlled list (M02 completion fix)', () => {
+    const entryLogs = TAB_REGISTRY['05_ENTRY_LOGS'];
+    if (isTableTab(entryLogs)) {
+      const eventTypeColumn = entryLogs.columns.find((c) => c.name === 'event_type');
+      expect(eventTypeColumn?.controlledList).toBe('entry_event_type');
+    }
+  });
+
   it('does not treat locale-repeated content/group IDs as the primary key for multilingual tabs', () => {
     const uiText = TAB_REGISTRY['08_UI_TEXT'];
     const dialogue = TAB_REGISTRY['15_DIALOGUE'];
