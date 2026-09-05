@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { GOOD_WORKBOOK } from '@veoullas-world/test-fixtures';
+import {
+  GOOD_WORKBOOK,
+  M02_FAKE_ADMIN_PASSWORD,
+  buildM02Workbook,
+} from '@veoullas-world/test-fixtures';
 import { createApp } from '../src/app.js';
 import { SheetGateway } from '../src/repositories/sheet-gateway.js';
 import { FakeGoogleSheetsClient } from './helpers/fake-sheets-client.js';
@@ -13,6 +17,17 @@ function appWithFakeGateway() {
 
 function appWithoutGateway() {
   return createApp({ getGateway: () => null });
+}
+
+async function adminCookieFor(app: ReturnType<typeof createApp>): Promise<string> {
+  const res = await request(app).post('/api/auth/admin').send({
+    username: 'admin_fixture',
+    password: M02_FAKE_ADMIN_PASSWORD,
+    deviceId: 'device_app_test',
+    attemptId: 'app_test_admin_login',
+  });
+  const setCookie = res.headers['set-cookie'] as unknown as string[];
+  return setCookie.find((c) => c.startsWith('vw_admin_session='))!.split(';')[0]!;
 }
 
 describe('GET /api/health', () => {
@@ -72,14 +87,24 @@ describe('GET /api/bootstrap', () => {
 });
 
 describe('GET /api/admin/schema-health', () => {
-  it('returns sanitized structural diagnostics only', async () => {
+  it('rejects an unauthenticated request (protected by the M02 Admin middleware)', async () => {
     const response = await request(appWithFakeGateway()).get('/api/admin/schema-health');
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('SESSION_REQUIRED');
+  });
+
+  it('returns sanitized structural diagnostics only, for an authenticated Admin', async () => {
+    const client = new FakeGoogleSheetsClient(structuredClone(buildM02Workbook()));
+    const gateway = new SheetGateway(client, { ttlSeconds: 60 });
+    const app = createApp({ getGateway: () => gateway });
+    const cookie = await adminCookieFor(app);
+
+    const response = await request(app).get('/api/admin/schema-health').set('Cookie', cookie);
 
     expect(response.status).toBe(200);
     expect(response.body.summary.expectedTabCount).toBe(42);
-    expect(response.body.note).toMatch(/M02/);
     const serialized = JSON.stringify(response.body);
-    expect(serialized).not.toContain('fixture-admin-pass');
+    expect(serialized).not.toContain(M02_FAKE_ADMIN_PASSWORD);
     expect(serialized).not.toContain('FAKE_GEMINI_KEY_NOT_REAL');
   });
 });

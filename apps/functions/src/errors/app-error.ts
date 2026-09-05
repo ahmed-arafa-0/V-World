@@ -12,7 +12,7 @@ export class AppError extends Error {
   }
 }
 
-function httpStatusForCode(code: ApiErrorCode): number {
+export function httpStatusForCode(code: ApiErrorCode): number {
   switch (code) {
     case 'not_found':
     case 'SHEET_TAB_MISSING':
@@ -24,6 +24,7 @@ function httpStatusForCode(code: ApiErrorCode): number {
     case 'INVALID_REFERENCE':
       return 400;
     case 'SHEET_ACCESS_DENIED':
+    case 'SESSION_FORBIDDEN':
       return 403;
     case 'backend_not_configured':
     case 'GOOGLE_CONFIG_NOT_FOUND':

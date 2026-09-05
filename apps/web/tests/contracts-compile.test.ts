@@ -89,9 +89,8 @@ describe('shared contracts compile and are usable from the frontend', () => {
     expect(schemaHealth.summary.expectedTabCount).toBe(42);
   });
 
-  it('builds a valid SafeSessionSummary using the shared type (never a Gate code or password)', () => {
+  it('builds a valid SafeSessionSummary using the shared type (never a session ID, Gate code, or password)', () => {
     const session: SafeSessionSummary = {
-      sessionId: 'sess_test',
       kind: 'owner',
       userId: 'veoulla',
       status: 'active',
@@ -101,16 +100,21 @@ describe('shared contracts compile and are usable from the frontend', () => {
     };
 
     expect(session.kind).toBe('owner');
+    expect(Object.keys(session)).not.toContain('sessionId');
     expect(Object.keys(session)).not.toContain('gateCode');
     expect(Object.keys(session)).not.toContain('password');
   });
 
   it('builds a valid GateLoginRequest/GateLoginResult pair using the shared types', () => {
-    const request: GateLoginRequest = { code: '1234', deviceId: 'device_1', language: 'en' };
+    const request: GateLoginRequest = {
+      digits: ['1', '2', '3', '4'],
+      deviceId: 'device_1',
+      language: 'en',
+      attemptId: 'attempt_1',
+    };
     const success: GateLoginResult = {
       ok: true,
       session: {
-        sessionId: 'sess_test',
         kind: 'owner',
         userId: 'veoulla',
         status: 'active',
@@ -129,17 +133,23 @@ describe('shared contracts compile and are usable from the frontend', () => {
         remainingAttempts: 0,
         cooldownSeconds: 10,
         cooldownEndsAt: null,
+        retryAfterSeconds: 10,
       },
     };
 
-    expect(request.code).toBe('1234');
+    expect(request.digits).toEqual(['1', '2', '3', '4']);
     expect(success.ok).toBe(true);
     expect(failure.ok).toBe(false);
     expect(rateLimited.ok).toBe(false);
   });
 
   it('builds a valid AdminLoginRequest/AdminLoginResult pair using the shared types', () => {
-    const request: AdminLoginRequest = { username: 'admin_ahmed', password: 'not-real' };
+    const request: AdminLoginRequest = {
+      username: 'admin_ahmed',
+      password: 'not-real',
+      deviceId: 'device_1',
+      attemptId: 'attempt_2',
+    };
     const result: AdminLoginResult = {
       ok: false,
       code: 'INVALID_ADMIN_CREDENTIALS',
@@ -157,15 +167,26 @@ describe('shared contracts compile and are usable from the frontend', () => {
       code: 'SESSION_TERMINATED',
       message: 'nope',
     };
+    const forbidden: SessionResumeResult = {
+      ok: false,
+      code: 'SESSION_FORBIDDEN',
+      message: 'nope',
+    };
     const logout: SessionLogoutResult = { ok: true };
 
     expect(resume.ok).toBe(false);
     expect(heartbeat.ok).toBe(false);
+    expect(forbidden.ok).toBe(false);
     expect(logout.ok).toBe(true);
   });
 
   it('builds a valid PageOpenEvent and RateLimitedResponse using the shared types', () => {
-    const pageOpen: PageOpenEvent = { language: 'en', route: '/', deviceId: 'device_1' };
+    const pageOpen: PageOpenEvent = {
+      operationId: 'op_1',
+      language: 'en',
+      route: '/',
+      deviceId: 'device_1',
+    };
     const rateLimited: RateLimitedResponse = {
       ok: false,
       code: 'RATE_LIMITED',
@@ -175,10 +196,11 @@ describe('shared contracts compile and are usable from the frontend', () => {
         remainingAttempts: 0,
         cooldownSeconds: 30,
         cooldownEndsAt: null,
+        retryAfterSeconds: 30,
       },
     };
 
-    expect(pageOpen.language).toBe('en');
+    expect(pageOpen.operationId).toBe('op_1');
     expect(rateLimited.rateLimit.maxAttempts).toBe(3);
   });
 });

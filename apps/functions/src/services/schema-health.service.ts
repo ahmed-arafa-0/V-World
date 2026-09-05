@@ -16,7 +16,7 @@ import type {
 import type { ReadOptions, SheetGateway } from '../repositories/sheet-gateway.js';
 
 const TEMPORARY_ENDPOINT_NOTE =
-  'This endpoint is temporary and returns only sanitized structural diagnostics. It must be protected by Admin authentication starting M02.';
+  'This endpoint returns only sanitized structural diagnostics and requires an authenticated Admin session (see the Admin authorization middleware).';
 
 const REDACTED_COLUMN = '[redacted]';
 /** Defense in depth for columns the registry doesn't know about yet (see UNKNOWN_COLUMN). */

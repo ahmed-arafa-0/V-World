@@ -5,9 +5,10 @@ import type { SheetGateway } from '../repositories/sheet-gateway.js';
 import { computeSchemaHealth } from '../services/schema-health.service.js';
 
 /**
- * GET /api/admin/schema-health — TEMPORARY, UNAUTHENTICATED read-only route.
- * Admin authentication lands in M02; until then this must never return Sheet
- * row contents, passwords, Gate codes, private keys, service keys, or Drive
+ * GET /api/admin/schema-health — read-only, protected by the Admin
+ * authorization middleware (see `api/admin-auth-middleware.ts`, wired in
+ * `app.ts`). This handler itself must still never return Sheet row
+ * contents, passwords, Gate codes, private keys, service keys, or Drive
  * file IDs — only sanitized structural diagnostics.
  */
 export function createSchemaHealthHandler(getGateway: () => SheetGateway | null) {
