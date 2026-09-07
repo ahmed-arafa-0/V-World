@@ -8,6 +8,7 @@ import { createAdminLoginHandler, createGateLoginHandler } from './api/auth.js';
 import { createBootstrapHandler } from './api/bootstrap.js';
 import { createContentRuntimeHandler } from './api/content-runtime.js';
 import { createHealthHandler, resolveEnvironment } from './api/health.js';
+import { createMediaHandler } from './api/media.js';
 import { createSchemaHealthHandler } from './api/schema-health.js';
 import {
   createSessionHeartbeatHandler,
@@ -15,12 +16,16 @@ import {
   createSessionResumeHandler,
 } from './api/session.js';
 import type { CookieEnv } from './http/cookies.js';
+import type { GoogleDriveClient } from './google/drive-types.js';
+import { getProductionDriveClientOrNull } from './repositories/drive-context.js';
 import { getProductionGatewayOrNull } from './repositories/gateway-context.js';
 import type { SheetGateway } from './repositories/sheet-gateway.js';
 
 export interface CreateAppOptions {
   /** Defaults to the real, credential-backed production gateway (or null when unconfigured). */
   getGateway?: () => SheetGateway | null;
+  /** Defaults to the real, credential-backed production Drive client (or null when unconfigured). */
+  getDriveClient?: () => GoogleDriveClient | null;
   /** Backend clock seam — defaults to the real wall clock. Tests inject a fake to hit exact expiry/cooldown boundaries deterministically. */
   now?: () => Date;
   /** Cookie `Secure` attribute seam — defaults to true only in the real `production` environment (compatible with plain HTTP on localhost/emulators). */
@@ -29,6 +34,7 @@ export interface CreateAppOptions {
 
 export function createApp(options?: CreateAppOptions): Express {
   const getGateway = options?.getGateway ?? getProductionGatewayOrNull;
+  const getDriveClient = options?.getDriveClient ?? getProductionDriveClientOrNull;
   const now = options?.now ?? (() => new Date());
   const isProduction = options?.isProduction ?? (() => resolveEnvironment() === 'production');
   const cookieEnv = (): CookieEnv => ({ isProduction: isProduction() });
@@ -76,6 +82,10 @@ export function createApp(options?: CreateAppOptions): Express {
 
   const requireOwner = createOwnerAuthMiddleware(getGateway, now, cookieEnv);
   app.get('/api/content/runtime', requireOwner, createContentRuntimeHandler(getGateway));
+
+  const mediaHandler = createMediaHandler(getGateway, getDriveClient);
+  app.get('/api/media/:assetId', requireOwner, mediaHandler);
+  app.head('/api/media/:assetId', requireOwner, mediaHandler);
 
   app.use((req, res) => {
     const notFound: ApiError = {

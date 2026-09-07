@@ -24,6 +24,8 @@
     "preflight:m02": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m02-preflight.mjs",
     "seed:m02": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-m02-access-config.mjs",
     "test:m02:live": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m02-live-auth.mjs",
+    "preflight:m03b1": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m03b1-preflight.mjs",
+    "audit:entry-log-events": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/audit-entry-log-event-types.mjs",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:functions": "npm run dev --workspace=apps/functions",
     "emulators": "firebase emulators:start --only hosting,functions",

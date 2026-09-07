@@ -48,6 +48,26 @@ export function httpStatusForCode(code: ApiErrorCode): number {
       return 500;
     case 'ACCESS_SERVICE_UNAVAILABLE':
       return 503;
+    case 'MEDIA_ASSET_INVALID':
+    case 'MEDIA_RANGE_MALFORMED':
+      return 400;
+    case 'MEDIA_ASSET_NOT_FOUND':
+    case 'MEDIA_ASSET_DISABLED':
+    case 'MEDIA_VARIANT_NOT_FOUND':
+      return 404;
+    case 'MEDIA_FILE_OUTSIDE_ROOT':
+    case 'MEDIA_SHORTCUT_REJECTED':
+      return 403;
+    case 'MEDIA_VERSION_MISMATCH':
+      return 409;
+    case 'MEDIA_UNSUPPORTED_MIME':
+      return 415;
+    case 'MEDIA_RANGE_NOT_SATISFIABLE':
+      return 416;
+    case 'MEDIA_FILE_INACCESSIBLE':
+      return 502;
+    case 'MEDIA_UPSTREAM_UNAVAILABLE':
+      return 503;
     case 'internal_error':
     default:
       return 500;

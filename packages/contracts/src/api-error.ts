@@ -15,7 +15,8 @@ export type ApiErrorCode =
   | 'ROW_NOT_FOUND'
   | 'INVALID_REFERENCE'
   | 'SHEET_WRITE_CONFLICT'
-  | AccessErrorCode;
+  | AccessErrorCode
+  | MediaErrorCode;
 
 /**
  * Safe access/session error codes (M02). Never accompanied by a Gate code,
@@ -33,6 +34,25 @@ export type AccessErrorCode =
   | 'SESSION_FORBIDDEN'
   | 'ACCESS_CONFIG_INVALID'
   | 'ACCESS_SERVICE_UNAVAILABLE';
+
+/**
+ * Safe media-gateway error codes (M03-B1). Never accompanied by a Drive file
+ * ID, an authorization header/token, service-account data, or a raw Google
+ * error — only this typed code and a generic, non-identifying message.
+ */
+export type MediaErrorCode =
+  | 'MEDIA_ASSET_INVALID'
+  | 'MEDIA_ASSET_NOT_FOUND'
+  | 'MEDIA_ASSET_DISABLED'
+  | 'MEDIA_VERSION_MISMATCH'
+  | 'MEDIA_VARIANT_NOT_FOUND'
+  | 'MEDIA_FILE_INACCESSIBLE'
+  | 'MEDIA_FILE_OUTSIDE_ROOT'
+  | 'MEDIA_SHORTCUT_REJECTED'
+  | 'MEDIA_UNSUPPORTED_MIME'
+  | 'MEDIA_RANGE_MALFORMED'
+  | 'MEDIA_RANGE_NOT_SATISFIABLE'
+  | 'MEDIA_UPSTREAM_UNAVAILABLE';
 
 /** Structured error shape returned by backend endpoints instead of raw provider errors. */
 export interface ApiError {

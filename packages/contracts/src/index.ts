@@ -7,7 +7,7 @@ export type {
   HealthCacheStatus,
 } from './health.js';
 export type { BackendConfigReason, BackendConfigStatus } from './config-status.js';
-export type { ApiErrorCode, AccessErrorCode, ApiError } from './api-error.js';
+export type { ApiErrorCode, AccessErrorCode, MediaErrorCode, ApiError } from './api-error.js';
 export type {
   SchemaHealthStatus,
   SchemaHealthSeverity,
@@ -63,3 +63,4 @@ export {
   type ContentDiagnostic,
   type ContentRuntimeResponse,
 } from './content-runtime.js';
+export { MEDIA_VARIANTS, isMediaVariant, type MediaVariant } from './media.js';
