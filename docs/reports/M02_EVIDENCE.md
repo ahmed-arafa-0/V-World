@@ -1,7 +1,7 @@
 # M02 — Gate Access, Admin Access, Sessions, IP Logs: Evidence Report
 
 **Milestone:** M02 (complete: M02-A, M02-B2, M02-C)
-**Date:** 2026-09-05
+**Date:** 2026-09-05 (Gate keyboard UX follow-up added 2026-09-06, §6a)
 **Scope of this report (M02-C only):** the schema-registry completion fix, the frontend Gate/Admin UI, heartbeats, a live verification script, Playwright coverage, and this evidence report. M02-A (access foundation) and M02-B2 (authentication/session API runtime) are separately documented in `docs/reports/M02_PART_A_CHECKPOINT.md` and `docs/reports/M02_B2_CHECKPOINT.md` and are **not** re-described in full here except where this report needs to reference them.
 
 ---
@@ -46,6 +46,7 @@
 - `apps/web/tests/{AdminPage,routes}.test.tsx`, `apps/web/tests/helpers/mockApi.ts`, `apps/web/tests/setup.ts` — updated for the new auth-gated pages; the mock now tracks per-kind login state statefully so a fresh UI login flows into subsequent resume/heartbeat/schema-health calls the same way a real cookie would.
 - `tests/e2e/{mobile-viewport,network-security,route-refresh}.spec.ts` — updated for the new Gate/Admin content and the now-protected schema-health route.
 - `package.json` — added `test:m02:live`.
+- **(2026-09-06 follow-up, §6a)** `apps/web/src/features/gate/GatePage.tsx`, `apps/web/tests/GatePage.test.tsx`, `tests/e2e/gate.spec.ts` — Gate keyboard UX: type-without-focusing-a-dial, sequential digit advance, Backspace, and gated Enter submission.
 
 **Deleted:**
 
@@ -100,6 +101,38 @@ All backend behavior behind these routes (validation, rate limiting, idempotency
 - **Refresh resumes the valid owner session** via the cookie (`useSessionAccess`); expired/terminated sessions fall back to the Gate automatically.
 - **Admin:** `/admin` resolves the Admin session first; unauthenticated shows a username/masked-password form (`type="password"`) that never repopulates the password after any submit attempt; generic failure/remaining-attempts/cooldown feedback mirrors the Gate; success shows the existing Schema Health view (now gated, with a "Signed in as `<username>`" line and a logout button); `/api/admin/schema-health` itself remains inaccessible without a valid Admin session (backend-enforced, unchanged from M02-B2); direct refresh on `/admin` works (SPA rewrite, proven by `route-refresh.spec.ts`); an owner login never satisfies Admin access and vice versa (backend-enforced `SESSION_FORBIDDEN`/cookie-name separation, proven live in §7 and in `owner-admin-isolation.spec.ts`).
 
+## 6a. Follow-up (2026-09-06): Gate keyboard UX — type without clicking a dial
+
+A focused, keyboard-only UX improvement to the Gate, requested and scoped separately from the rest of M02-C above. Ahmed had already manually verified correct Gate login, Admin login, and both authenticated states open successfully before this change; this follow-up touches only Gate keyboard handling, not authentication logic, Admin, or the backend.
+
+**Behavior added** (`apps/web/src/features/gate/GatePage.tsx`):
+
+- The Gate's outer container is now a keyboard landing pad (`ref` + `tabIndex={-1}` + `data-testid="gate-root"`) that receives focus automatically via `useEffect` the moment `useSessionAccess` resolves to `unauthenticated` — first load once session resolution finishes, and again after logout — so digits can be typed immediately with no click or Tab needed.
+- A new `filledCount` state (0–4) tracks how many digits have been explicitly typed through this global flow, kept entirely separate from any single dial's displayed value and never combined into a string anywhere (still true only at the moment of the API call, unchanged from before).
+- **Digits 0–9:** the container's `onKeyDown` fills `digits[filledCount]` and advances `filledCount`; input is ignored once `filledCount` reaches 4 (no auto-submit).
+- **Backspace:** decrements `filledCount` and clears that position back to `0`; a no-op when `filledCount` is already `0`.
+- **Enter:** submits only when `filledCount === 4`; otherwise it is swallowed (`preventDefault`) and does nothing. The existing "Enter" **button** click path is untouched and still submits whatever `digits` currently holds regardless of `filledCount`, preserving every prior test/behavior that clicks the button directly.
+- **Guarding:** the whole handler no-ops whenever `disabled` (`pending || rateLimited`) is true, so a pending request or an active cooldown cannot be bypassed by the keyboard path either.
+- **No double-handling:** the handler first checks `event.defaultPrevented` — an individual `DigitDial`'s own ArrowUp/ArrowDown/Home/End/direct-digit handling (unchanged, in `DigitDial.tsx`) always runs first (event bubbles child→parent) and calls `preventDefault()`, so the container never reprocesses a key a focused dial already handled. This is what keeps the pre-existing "focus one dial, type a digit, only that dial changes" behavior intact side-by-side with the new global sequential flow.
+- **Focus restored after every submit attempt** that keeps the user on the unauthenticated screen (offline, invalid, rate-limited) — `containerRef.current?.focus()` — so typing works immediately again without another click, and digits/`filledCount` are both reset to their initial state right after every submit attempt (never retained).
+- Nothing in `DigitDial.tsx` or any Admin/backend file was changed.
+
+**Tests added** (`apps/web/tests/GatePage.test.tsx`, 9 new — file went from 9 to 19 `it`s per §9):
+
+- Gate container receives focus automatically once session resolution completes, with no dial clicked.
+- Four digits typed with no click/focus fill all four dials in order.
+- A fifth digit is ignored (no fifth position, no auto-submit) once four are filled.
+- Backspace moves the active position backward and allows correcting a digit; repeated Backspace on an empty entry is a safe no-op.
+- Enter with fewer than four digits does not call `/api/auth/gate`.
+- Enter after exactly four digits submits exactly once.
+- Focus is restored after an invalid-code error so typing works immediately again.
+- A second Enter press while the first request is still pending does not trigger a duplicate `/api/auth/gate` call (verified with a deliberately delayed fetch mock).
+- Digit/Enter input is ignored for the duration of an active rate-limit cooldown.
+
+All pre-existing Gate tests (individual-dial ArrowUp/Home/End/digit-typing, mouse/touch dial buttons, generic invalid feedback, cooldown display, session resume, logout) pass unmodified.
+
+**Playwright** (`tests/e2e/gate.spec.ts`): 3 new tests added to the existing unauthenticated-Gate describe block — typing four digits with no click/focus, Backspace-correct-then-Enter-with-only-two-digits-does-not-submit, and Enter-after-four-typed-digits-submits. Run against the real Sheet via the local emulator, `desktop-chromium` project only (the "relevant Gate tests" for this specific keyboard change, not a full-suite/mobile rerun): **7 passed, 1 flaky-then-passed-on-retry, 1 skipped** (the pre-existing credential-gated successful-login test, same reason as §7/§8 — `E2E_GATE_CODE` not set in this session). The one flake was the pre-existing first test in the file (`shows the Gate with four digit dials...`, unrelated to keyboard code) timing out on a cold emulator start and passing on the config's existing `retries: 1` — the same documented class of flake as §8, not a regression from this change. All 3 new keyboard tests passed on their first attempt.
+
 ## 7. Live verification (`npm run test:m02:live`)
 
 Runs the real Express app (`createApp()`, real credential-backed gateway) on an ephemeral local port and exercises it over real HTTP against the real Sheet — never a fake gateway. Never prints a Gate code, Admin password, session ID, or cookie value. The real Gate code / Admin password are read only from optional `E2E_GATE_CODE`/`E2E_ADMIN_PASSWORD` env vars (never set in this session, since Claude must never obtain or be given these values) — every check that needs them reports **SKIP**, never a fabricated PASS.
@@ -143,14 +176,19 @@ Coverage delivered: initial Gate (desktop+mobile), keyboard dial interaction, po
 
 ## 9. Test totals (no contradictory counts)
 
-**323 unit/integration tests, 32 files, all passing** (`npm run test`): 46 `packages/sheet-schema` (4 files) + 187 `apps/functions` (19 files) + 90 `apps/web` (9 files). This is up from M02-B2's 281 (+42: 1 sheet-schema registry test, 2 functions schema-health tests, and 39 new/updated web tests across `GatePage.test.tsx` (9), `AdminPage.test.tsx` (8, rewritten), `accessApiClient.test.ts` (7), `useSessionAccess.test.ts` (5), `deviceId.test.ts` (3), `routes.test.tsx` (3, rewritten), plus `contracts-compile`/`import-boundary`/`healthClient` unchanged).
+**As of the 2026-09-06 keyboard follow-up: 333 unit/integration tests, 32 files, all passing** (`npm run test`): 46 `packages/sheet-schema` (4 files) + 187 `apps/functions` (19 files) + 100 `apps/web` (9 files). Up from this report's original 323 (+10, all in `GatePage.test.tsx`, which went from 9 to 19 `it`s — see §6a for exactly which 9 cases were added). No other file's count changed.
 
-**Live verification:** 27 passed / 0 failed / 8 skipped (§7).
-**Playwright:** 33 passed / 1 flaky-then-passed / 6 skipped, 0 hard failures (§8).
+For reference, the original 2026-09-05 M02-C total (before the keyboard follow-up) was 323: 46 `packages/sheet-schema` (4 files) + 187 `apps/functions` (19 files) + 90 `apps/web` (9 files), itself up from M02-B2's 281 (+42: 1 sheet-schema registry test, 2 functions schema-health tests, and 39 new/updated web tests across `GatePage.test.tsx` (9), `AdminPage.test.tsx` (8, rewritten), `accessApiClient.test.ts` (7), `useSessionAccess.test.ts` (5), `deviceId.test.ts` (3), `routes.test.tsx` (3, rewritten), plus `contracts-compile`/`import-boundary`/`healthClient` unchanged).
+
+**Live verification:** 27 passed / 0 failed / 8 skipped (§7) — unaffected by the keyboard follow-up, not rerun on 2026-09-06 since no backend/session code changed.
+**Playwright, original 2026-09-05 full suite:** 33 passed / 1 flaky-then-passed / 6 skipped, 0 hard failures (§8).
+**Playwright, 2026-09-06 keyboard follow-up (scoped rerun — `gate.spec.ts`, `desktop-chromium` only, see §6a):** 7 passed / 1 flaky-then-passed-on-retry / 1 skipped, 0 hard failures.
 
 ## 10. Commands run and results
 
-```
+Original 2026-09-05 M02-C run:
+
+```text
 npm run format:check    → PASS (after npm run format)
 npm run lint             → PASS, 0 errors, 0 warnings
 npm run typecheck         → PASS
@@ -160,6 +198,21 @@ npm run security:scan           → PASSED, no forbidden content in apps/web/dis
 npm run test:m02:live             → PASSED, 27/27 (8 skip, no secret printed)
 npm run test:e2e                    → 33 passed, 1 flaky (passed on retry), 6 skipped
 ```
+
+2026-09-06 Gate keyboard UX follow-up (§6a) — rerun after the change:
+
+```text
+npx prettier --check <2 changed files>            → PASS
+npm run lint                                       → PASS, 0 errors, 0 warnings
+npm run typecheck                                  → PASS (full monorepo)
+npm run test                                       → PASS, 333/333 (46 + 187 + 100)
+npm run build                                      → PASS
+npm run security:scan                              → PASSED, no forbidden content in apps/web/dist
+npx playwright test tests/e2e/gate.spec.ts --project=desktop-chromium
+                                                    → 7 passed, 1 flaky-then-passed, 1 skipped
+```
+
+`npm run test:m02:live` was not rerun for this follow-up — no backend, session, or authentication logic changed, only Gate-page client-side keyboard handling.
 
 ## 11. Screenshots
 
@@ -179,6 +232,6 @@ Captured via `node scripts/capture-m02-screenshots.mjs` against the local emulat
 
 ## 13. Confirmations
 
-- **No M03 feature was started.** No localization runtime, asset/icon registry, Drive media gateway, world/story feature, or any content beyond the Gate/Admin auth UI and its supporting plumbing was touched.
-- **Nothing was committed.** `git status` at the end of this session shows only the modified/new/deleted files listed in §1 — no commit was made at any point in M02-C.
+- **No M03 feature was started.** No localization runtime, asset/icon registry, Drive media gateway, world/story feature, or any content beyond the Gate/Admin auth UI and its supporting plumbing was touched. This holds for the 2026-09-06 keyboard follow-up too — it touched only `GatePage.tsx`'s keyboard handling, its unit tests, and `gate.spec.ts`; no Admin UI, no backend code, no M03 work.
+- **Nothing was committed.** `git status` at the end of this session shows only the modified/new/deleted files listed in §1 — no commit was made at any point in M02-C, including the 2026-09-06 follow-up.
 - **No real Gate code, Admin password, session ID, cookie value, private key, or Google credential was printed, screenshotted, or otherwise exposed** anywhere in this session — every place a real secret could appear was either read through a masked/status-only check (§0, §7) or gated behind an environment variable Claude never set and must never request.

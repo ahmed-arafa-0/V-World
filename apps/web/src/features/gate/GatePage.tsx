@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useSessionAccess } from '../../hooks/useSessionAccess';
 import { isNetworkFailure } from '../../services/accessApiClient';
 import { gateLogin } from '../../services/accessClient';
 import { generateClientId } from '../../services/clientIds';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { LoadingState } from '../../components/LoadingState';
+import { ContentRuntimeLab } from '../content-lab/ContentRuntimeLab';
 import { DigitDial } from './DigitDial';
 import styles from './GatePage.module.css';
 
@@ -19,15 +20,32 @@ const DIGIT_LABELS = ['First digit', 'Second digit', 'Third digit', 'Fourth digi
 export function GatePage() {
   const { status, session, markAuthenticated, logout } = useSessionAccess('owner');
   const [digits, setDigits] = useState<[number, number, number, number]>([0, 0, 0, 0]);
+  // How many of the four digits have been explicitly typed via the global
+  // sequential keyboard flow (independent of a single dial's own value —
+  // never combined into a string, only counted).
+  const [filledCount, setFilledCount] = useState(0);
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<GateFeedback>({ kind: 'idle' });
   const countdownRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     return () => {
       if (countdownRef.current !== null) window.clearInterval(countdownRef.current);
     };
   }, []);
+
+  // Land keyboard focus on the Gate as soon as the unauthenticated form is
+  // shown (first resolution, or right after logout) so digits can be typed
+  // without clicking or tabbing to a dial first.
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      containerRef.current?.focus();
+    }
+  }, [status]);
+
+  const isBlocked = feedback.kind === 'rateLimited';
+  const disabled = pending || isBlocked;
 
   function setDigitAt(index: number, value: number) {
     setDigits((prev) => {
@@ -70,9 +88,11 @@ export function GatePage() {
     setPending(false);
     // Never keep the entered digits in state any longer than the request needed.
     setDigits([0, 0, 0, 0]);
+    setFilledCount(0);
 
     if (isNetworkFailure(result)) {
       setFeedback({ kind: 'offline' });
+      containerRef.current?.focus();
       return;
     }
     if (result.ok) {
@@ -84,12 +104,42 @@ export function GatePage() {
       const seconds =
         result.rateLimit?.retryAfterSeconds ?? result.rateLimit?.cooldownSeconds ?? 10;
       startCooldownCountdown(seconds);
+      containerRef.current?.focus();
       return;
     }
     setFeedback({
       kind: 'invalid',
       remainingAttempts: result.rateLimit?.remainingAttempts ?? null,
     });
+    containerRef.current?.focus();
+  }
+
+  function handleContainerKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    // An individual dial (arrows/Home/End/direct digit) already handled and
+    // preventDefault()-ed this event — never double-handle it here.
+    if (event.defaultPrevented || disabled) return;
+
+    if (/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+      if (filledCount >= 4) return;
+      setDigitAt(filledCount, Number(event.key));
+      setFilledCount(filledCount + 1);
+      return;
+    }
+
+    if (event.key === 'Backspace') {
+      event.preventDefault();
+      if (filledCount === 0) return;
+      const previousIndex = filledCount - 1;
+      setDigitAt(previousIndex, 0);
+      setFilledCount(previousIndex);
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (filledCount === 4) void handleSubmit();
+    }
   }
 
   if (status === 'resolving') {
@@ -113,10 +163,10 @@ export function GatePage() {
     return (
       <div className={styles.page}>
         <h1>Veoulla&apos;s World</h1>
-        <div className={styles.granted} role="status">
-          <p className={styles.grantedTitle}>Access granted</p>
-          <p>World loading…</p>
-        </div>
+        <p className={styles.grantedTitle} role="status">
+          Access granted
+        </p>
+        <ContentRuntimeLab />
         <button type="button" className={styles.logoutButton} onClick={() => void logout()}>
           Log out
         </button>
@@ -124,11 +174,14 @@ export function GatePage() {
     );
   }
 
-  const isBlocked = feedback.kind === 'rateLimited';
-  const disabled = pending || isBlocked;
-
   return (
-    <div className={styles.page}>
+    <div
+      className={styles.page}
+      ref={containerRef}
+      tabIndex={-1}
+      onKeyDown={handleContainerKeyDown}
+      data-testid="gate-root"
+    >
       <h1>Veoulla&apos;s World</h1>
       <p className={styles.subtitle}>The Gate</p>
 

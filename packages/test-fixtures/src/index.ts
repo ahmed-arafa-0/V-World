@@ -18,3 +18,12 @@ export {
   M02_VALIDATION_LISTS_ROWS,
   buildM02Workbook,
 } from './m02-access-fixtures.js';
+export {
+  M03_UI_TEXT_ROWS,
+  M03_ICONS_ROWS,
+  M03_ASSETS_ROWS,
+  M03_DIALOGUE_ROWS,
+  M03_VOICEOVER_ROWS,
+  M03_TEXT_IDS,
+  buildM03Workbook,
+} from './m03-content-fixtures.js';

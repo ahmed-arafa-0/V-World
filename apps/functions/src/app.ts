@@ -2,9 +2,11 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import type { ApiError } from '@veoullas-world/contracts';
 import { createAdminAuthMiddleware } from './api/admin-auth-middleware.js';
+import { createOwnerAuthMiddleware } from './api/owner-auth-middleware.js';
 import { createPageOpenHandler } from './api/access.js';
 import { createAdminLoginHandler, createGateLoginHandler } from './api/auth.js';
 import { createBootstrapHandler } from './api/bootstrap.js';
+import { createContentRuntimeHandler } from './api/content-runtime.js';
 import { createHealthHandler, resolveEnvironment } from './api/health.js';
 import { createSchemaHealthHandler } from './api/schema-health.js';
 import {
@@ -71,6 +73,9 @@ export function createApp(options?: CreateAppOptions): Express {
 
   const requireAdmin = createAdminAuthMiddleware(getGateway, now, cookieEnv);
   app.get('/api/admin/schema-health', requireAdmin, createSchemaHealthHandler(getGateway));
+
+  const requireOwner = createOwnerAuthMiddleware(getGateway, now, cookieEnv);
+  app.get('/api/content/runtime', requireOwner, createContentRuntimeHandler(getGateway));
 
   app.use((req, res) => {
     const notFound: ApiError = {

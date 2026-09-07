@@ -68,6 +68,50 @@ test.describe('Gate — initial render and interaction', () => {
     const bodyText = await page.locator('body').innerText();
     expect(bodyText).not.toMatch(/\d{4}/);
   });
+
+  test('keyboard: typing four digits with no click or dial focus fills all four dials in order', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+
+    await page.keyboard.type('1234');
+
+    const dials = page.getByRole('spinbutton');
+    await expect(dials.nth(0)).toHaveAttribute('aria-valuenow', '1');
+    await expect(dials.nth(1)).toHaveAttribute('aria-valuenow', '2');
+    await expect(dials.nth(2)).toHaveAttribute('aria-valuenow', '3');
+    await expect(dials.nth(3)).toHaveAttribute('aria-valuenow', '4');
+  });
+
+  test('keyboard: Backspace corrects a mistyped digit, and Enter with fewer than four does not submit', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+
+    await page.keyboard.type('12');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('9');
+    await page.keyboard.press('Enter');
+
+    const dials = page.getByRole('spinbutton');
+    await expect(dials.nth(0)).toHaveAttribute('aria-valuenow', '1');
+    await expect(dials.nth(1)).toHaveAttribute('aria-valuenow', '9');
+    // Only two of four digits were entered — Enter must not have submitted.
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+    await expect(page.getByText(/incorrect code/i)).toHaveCount(0);
+  });
+
+  test('keyboard: Enter after exactly four typed digits submits', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+
+    await page.keyboard.type('0000');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByText(/incorrect code/i)).toBeVisible();
+  });
 });
 
 test.describe('Gate — successful owner login (requires E2E_GATE_CODE)', () => {
@@ -81,7 +125,7 @@ test.describe('Gate — successful owner login (requires E2E_GATE_CODE)', () => 
     await page.getByRole('button', { name: /enter/i }).click();
 
     await expect(page.getByText(/access granted/i)).toBeVisible();
-    await expect(page.getByText(/world loading/i)).toBeVisible();
+    await expect(page.getByTestId('content-runtime-lab')).toBeVisible();
 
     // Refresh must resume the valid owner session from the HttpOnly cookie, not re-show the dials.
     await page.reload();

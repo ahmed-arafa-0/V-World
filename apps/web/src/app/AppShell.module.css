@@ -6,21 +6,34 @@
   color: var(--text);
 }
 
+/*
+ * A negative-offset "left: -999px" hide technique was used here previously.
+ * In an RTL document that adds ~999px to document.documentElement.scrollWidth
+ * (a real browser quirk, not merely a stray pixel) and produces horizontal
+ * overflow on every RTL page — invisible in LTR-only testing, but proven by
+ * M03-A's first real dir="rtl" screens. This offset-free "visually hidden"
+ * technique keeps the link in normal flow (top/left: 0) and hides it purely
+ * via a 1px clipped box, so no direction can push it off-canvas.
+ */
 .skipLink {
   position: absolute;
-  left: -999px;
-  top: auto;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .skipLink:focus {
   position: fixed;
-  left: 1rem;
   top: 1rem;
+  left: 1rem;
   width: auto;
   height: auto;
+  clip: auto;
+  white-space: normal;
   padding: 0.5rem 1rem;
   background: var(--accent);
   color: var(--accent-contrast);

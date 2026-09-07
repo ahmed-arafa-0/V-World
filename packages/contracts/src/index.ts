@@ -48,3 +48,18 @@ export type {
   PageOpenEvent,
   PageOpenResult,
 } from './access.js';
+export {
+  SUPPORTED_LOCALES,
+  FALLBACK_LOCALE,
+  type LocaleCode,
+  type ContentDirection,
+  type RuntimeLanguage,
+  type RuntimeUiTextEntry,
+  type RuntimeDialogueLine,
+  type RuntimeVoiceoverEntry,
+  type RuntimeIconEntry,
+  type RuntimeAssetStatus,
+  type ContentDiagnosticCode,
+  type ContentDiagnostic,
+  type ContentRuntimeResponse,
+} from './content-runtime.js';

@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import type {
   BootstrapResponse,
+  ContentRuntimeResponse,
   HealthResponse,
   SafeSessionSummary,
   SchemaHealthResponse,
@@ -101,6 +102,160 @@ export const SAMPLE_SCHEMA_HEALTH_RESPONSE: SchemaHealthResponse = {
   note: 'This endpoint returns only sanitized structural diagnostics and requires an authenticated Admin session.',
 };
 
+export const SAMPLE_CONTENT_RUNTIME_RESPONSE: ContentRuntimeResponse = {
+  ok: true,
+  languages: [
+    {
+      localeId: 'en',
+      shortCode: 'EN',
+      englishName: 'English',
+      nativeName: 'English',
+      direction: 'ltr',
+      fallbackLocale: 'en',
+      sortOrder: 1,
+    },
+    {
+      localeId: 'ar-EG',
+      shortCode: 'AR',
+      englishName: 'Egyptian Arabic',
+      nativeName: 'العربية المصرية',
+      direction: 'rtl',
+      fallbackLocale: 'en',
+      sortOrder: 2,
+    },
+    {
+      localeId: 'it',
+      shortCode: 'IT',
+      englishName: 'Italian',
+      nativeName: 'Italiano',
+      direction: 'ltr',
+      fallbackLocale: 'en',
+      sortOrder: 3,
+    },
+    {
+      localeId: 'el',
+      shortCode: 'EL',
+      englishName: 'Greek',
+      nativeName: 'Ελληνικά',
+      direction: 'ltr',
+      fallbackLocale: 'en',
+      sortOrder: 4,
+    },
+    {
+      localeId: 'fr',
+      shortCode: 'FR',
+      englishName: 'French',
+      nativeName: 'Français',
+      direction: 'ltr',
+      fallbackLocale: 'en',
+      sortOrder: 5,
+    },
+  ],
+  uiText: [
+    {
+      uiTextRowId: 'uit_content_lab_title_en',
+      textId: 'content_lab_title',
+      screenId: 'content_lab',
+      componentId: 'heading',
+      locale: 'en',
+      text: 'Content Runtime Lab',
+      direction: 'ltr',
+      ariaLabel: 'Content Runtime Lab heading',
+    },
+    {
+      uiTextRowId: 'uit_content_lab_title_ar',
+      textId: 'content_lab_title',
+      screenId: 'content_lab',
+      componentId: 'heading',
+      locale: 'ar-EG',
+      text: 'معمل تشغيل المحتوى',
+      direction: 'rtl',
+      ariaLabel: 'عنوان معمل تشغيل المحتوى',
+    },
+    {
+      uiTextRowId: 'uit_content_lab_incomplete_ar',
+      textId: 'content_lab_incomplete',
+      screenId: 'content_lab',
+      componentId: 'note',
+      locale: 'ar-EG',
+      text: 'ملاحظة بالعربية فقط',
+      direction: 'rtl',
+      ariaLabel: 'ملاحظة',
+    },
+  ],
+  dialogue: [
+    {
+      dialogueRowId: 'dlg_boot_en',
+      dialogueId: 'dlg_boot',
+      groupId: 'grp_boot',
+      sequence: 1,
+      speakerId: 'char_var',
+      locale: 'en',
+      text: 'Hello, Veoulla.',
+      direction: 'ltr',
+      emotion: 'warm',
+      displayMode: 'speech_bubble',
+      voiceoverMediaRef: '/api/media/asset_vo_boot_en?v=1',
+      requiresResponse: false,
+    },
+  ],
+  voiceover: [
+    {
+      voiceoverId: 'vo_boot_en',
+      contentType: 'dialogue',
+      contentId: 'dlg_boot',
+      locale: 'en',
+      mediaRef: '/api/media/asset_vo_boot_en?v=1',
+      captionText: 'Hello, Veoulla.',
+      direction: 'ltr',
+      durationMs: 2000,
+      captionStartMs: 0,
+      captionEndMs: 2000,
+    },
+  ],
+  icons: [
+    {
+      iconId: 'icon_map',
+      category: 'ui',
+      displayName: 'Map',
+      mediaRef: '/api/media/asset_icon_map?v=1',
+      format: 'svg',
+      rtlMirror: false,
+      altTextId: 'ui_map',
+    },
+    {
+      iconId: 'icon_back',
+      category: 'ui',
+      displayName: 'Back',
+      mediaRef: '/api/media/asset_icon_back?v=1',
+      format: 'svg',
+      rtlMirror: true,
+      altTextId: 'ui_back',
+    },
+  ],
+  assets: [
+    {
+      assetId: 'asset_icon_map',
+      assetType: 'image',
+      version: 1,
+      preloadPriority: 1,
+      hasMobileVariant: false,
+      hasPosterVariant: false,
+      mediaRef: '/api/media/asset_icon_map?v=1',
+    },
+  ],
+  diagnostics: [
+    {
+      code: 'MISSING_ENGLISH_FALLBACK',
+      tab: '08_UI_TEXT',
+      subjectId: 'content_lab_incomplete',
+      message: 'No enabled English ("en") row exists for "content_lab_incomplete" in 08_UI_TEXT.',
+    },
+  ],
+  cacheGeneratedAt: '2026-01-01T00:00:00.000Z',
+  requestId: 'test-content-runtime-request-id',
+};
+
 export const SAMPLE_OWNER_SESSION: SafeSessionSummary = {
   kind: 'owner',
   userId: 'veoulla',
@@ -132,6 +287,8 @@ export interface MockFetchOptions {
   gateLoginResult?: unknown;
   /** Overrides the result of the next POST /api/auth/admin call. Defaults to success. */
   adminLoginResult?: unknown;
+  /** Overrides the result of GET /api/content/runtime while the owner is logged in. Defaults to a sample success payload. */
+  contentRuntimeResult?: unknown;
 }
 
 /**
@@ -158,6 +315,12 @@ export function installMockFetch(options: MockFetchOptions = {}): void {
           return jsonResponse({ ok: false, code: 'SESSION_REQUIRED', message: 'nope' }, false);
         }
         return jsonResponse(SAMPLE_SCHEMA_HEALTH_RESPONSE);
+      }
+      if (url.startsWith('/api/content/runtime')) {
+        if (!ownerLoggedIn) {
+          return jsonResponse({ ok: false, code: 'SESSION_REQUIRED', message: 'nope' }, false);
+        }
+        return jsonResponse(options.contentRuntimeResult ?? SAMPLE_CONTENT_RUNTIME_RESPONSE);
       }
 
       if (url.startsWith('/api/access/page-open') && method === 'POST') {

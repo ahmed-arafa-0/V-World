@@ -44,6 +44,18 @@ test.describe('Network response security boundary', () => {
     }
   });
 
+  test('GET /api/content/runtime (unauthenticated, 401) never leaks credential, secret, or a raw Drive file ID', async ({
+    page,
+  }) => {
+    const response = await page.request.get('/api/content/runtime');
+    expect(response.status()).toBe(401);
+    const text = await response.text();
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      expect(text).not.toContain(pattern);
+    }
+    expect(text).not.toMatch(/"driveFileId"/);
+  });
+
   test('Gate/Admin login responses never leak the correct code/password on failure', async ({
     page,
   }) => {
