@@ -1,20 +1,19 @@
 import type { ReactNode } from 'react';
+import { useLocaleStore } from '../i18n/localeStore';
+import { playerText } from '../i18n/playerText';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
   children: ReactNode;
 }
 
-/**
- * Minimal application chrome for M00. The persistent Back/Map/Language/Walkman
- * controls described in the Living Bible belong to later milestones and are
- * intentionally not implemented here.
- */
+/** Shared accessible document shell; the player supplies its own fixed viewport. */
 export function AppShell({ children }: AppShellProps) {
+  const locale = useLocaleStore((s) => s.locale);
   return (
     <div className={styles.shell}>
       <a className={styles.skipLink} href="#main-content">
-        Skip to content
+        {playerText('skip', locale)}
       </a>
       <main id="main-content" className={styles.main}>
         {children}

@@ -76,10 +76,18 @@ describe('GET /api/content/runtime — owner authorization', () => {
     expect(res.body.languages).toHaveLength(5);
     expect(Array.isArray(res.body.uiText)).toBe(true);
     expect(Array.isArray(res.body.dialogue)).toBe(true);
-    expect(Array.isArray(res.body.voiceover)).toBe(true);
     expect(Array.isArray(res.body.icons)).toBe(true);
     expect(Array.isArray(res.body.assets)).toBe(true);
     expect(Array.isArray(res.body.diagnostics)).toBe(true);
+  });
+
+  it('never includes a voiceover field — narration/dialogue is text-only (Ahmed 2026-09-17)', async () => {
+    const { app } = makeApp();
+    const cookie = await loginOwner(app);
+
+    const res = await request(app).get('/api/content/runtime').set('Cookie', cookie);
+    expect(res.body).not.toHaveProperty('voiceover');
+    expect(JSON.stringify(res.body)).not.toContain('voiceoverMediaRef');
   });
 
   it('never exposes a raw Drive file ID, session row, or credential in the response', async () => {

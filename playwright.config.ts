@@ -30,7 +30,19 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run emulators:build',
-    url: BASE_URL,
+    // Deliberately NOT `BASE_URL` (hosting's static root) — the Hosting
+    // emulator serves index.html immediately regardless of whether the
+    // Functions emulator has finished loading the `api` function, so that
+    // check was satisfied ~10s before the backend could actually answer
+    // any `/api/*` request. An unrouted `/api/*` request 404s while
+    // Functions is still loading, and Playwright's own readiness check
+    // (isURLAvailable) explicitly treats 404 as "not ready" (only
+    // 200-403 counts) — so polling a real backend route here genuinely
+    // waits for the Functions emulator, not just the static file server.
+    // Root-caused via firebase-debug.log: "All emulators ready!" printed
+    // ~10s after Playwright had already started sending test traffic,
+    // producing "Could not reach the backend" on the very first request.
+    url: `${BASE_URL}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

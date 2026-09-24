@@ -15,6 +15,9 @@ export type ApiErrorCode =
   | 'ROW_NOT_FOUND'
   | 'INVALID_REFERENCE'
   | 'SHEET_WRITE_CONFLICT'
+  | 'WORLD_LOCKED'
+  | 'WORLD_INVALID_STATE'
+  | 'WORLD_CONTENT_UNAVAILABLE'
   | AccessErrorCode
   | MediaErrorCode;
 

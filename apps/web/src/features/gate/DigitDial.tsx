@@ -1,4 +1,6 @@
 import type { KeyboardEvent } from 'react';
+import { useLocaleStore } from '../../i18n/localeStore';
+import { playerText } from '../../i18n/playerText';
 import styles from './DigitDial.module.css';
 
 interface DigitDialProps {
@@ -20,6 +22,7 @@ function wrap(value: number): number {
  * the parent only ever sees one digit's numeric value at a time.
  */
 export function DigitDial({ label, value, onChange, disabled = false }: DigitDialProps) {
+  const locale = useLocaleStore((s) => s.locale);
   const increase = () => onChange(wrap(value + 1));
   const decrease = () => onChange(wrap(value - 1));
 
@@ -48,7 +51,7 @@ export function DigitDial({ label, value, onChange, disabled = false }: DigitDia
       <button
         type="button"
         className={styles.stepButton}
-        aria-label={`Increase ${label}`}
+        aria-label={`${playerText('increase', locale)} ${label}`}
         onClick={increase}
         disabled={disabled}
         tabIndex={-1}
@@ -70,7 +73,7 @@ export function DigitDial({ label, value, onChange, disabled = false }: DigitDia
       <button
         type="button"
         className={styles.stepButton}
-        aria-label={`Decrease ${label}`}
+        aria-label={`${playerText('decrease', locale)} ${label}`}
         onClick={decrease}
         disabled={disabled}
         tabIndex={-1}

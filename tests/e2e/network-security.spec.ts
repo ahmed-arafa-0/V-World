@@ -56,6 +56,21 @@ test.describe('Network response security boundary', () => {
     expect(text).not.toMatch(/"driveFileId"/);
   });
 
+  test('GET /api/content/pre-gate (public, 200) never leaks credential, secret, or a raw Drive file ID, and never returns audio pre-authentication', async ({
+    page,
+  }) => {
+    const response = await page.request.get('/api/content/pre-gate');
+    // Deliberately public (see apps/functions/src/api/pre-gate-content.ts) —
+    // unlike /api/content/runtime above, this one must succeed with no session.
+    expect(response.status()).toBe(200);
+    const text = await response.text();
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      expect(text).not.toContain(pattern);
+    }
+    expect(text).not.toMatch(/"driveFileId"/);
+    expect(text).not.toMatch(/"voiceoverMediaRef":\s*"/);
+  });
+
   test('Gate/Admin login responses never leak the correct code/password on failure', async ({
     page,
   }) => {

@@ -12,9 +12,11 @@ type StatusFilter = 'all' | 'healthy' | 'warning' | 'error';
 interface AdminSchemaHealthViewProps {
   session: SafeSessionSummary;
   onLogout: () => void;
+  /** True when rendered inside the tabbed Admin shell, which already shows its own heading/signed-in line. */
+  embedded?: boolean;
 }
 
-export function AdminSchemaHealthView({ session, onLogout }: AdminSchemaHealthViewProps) {
+export function AdminSchemaHealthView({ session, onLogout, embedded }: AdminSchemaHealthViewProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -55,14 +57,18 @@ export function AdminSchemaHealthView({ session, onLogout }: AdminSchemaHealthVi
   }, [state, search, statusFilter]);
 
   return (
-    <div className={styles.page}>
-      <h1>Admin Schema Health</h1>
-      <p className={styles.notice} role="status">
-        Signed in as {session.userId}.{' '}
-        <button type="button" className={styles.logoutLink} onClick={onLogout}>
-          Log out
-        </button>
-      </p>
+    <div className={embedded ? undefined : styles.page}>
+      {!embedded && (
+        <>
+          <h1>Admin Schema Health</h1>
+          <p className={styles.notice} role="status">
+            Signed in as {session.userId}.{' '}
+            <button type="button" className={styles.logoutLink} onClick={onLogout}>
+              Log out
+            </button>
+          </p>
+        </>
+      )}
 
       {state.status === 'loading' && <LoadingState label="Loading schema health…" />}
 

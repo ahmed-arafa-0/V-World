@@ -89,6 +89,242 @@ describe('DriveGateway.isUnderRoot', () => {
   });
 });
 
+describe('DriveGateway.findUniqueUnderRoot', () => {
+  it('finds the one match under the configured root', async () => {
+    const client = new FakeGoogleDriveClient({
+      file_1: {
+        metadata: fakeMetadata({
+          id: 'file_1',
+          name: 'gate_closed_desktop_v1.png',
+          parents: [ROOT],
+        }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.findUniqueUnderRoot('gate_closed_desktop_v1.png', ROOT);
+    expect(result).toEqual({ kind: 'found', metadata: expect.objectContaining({ id: 'file_1' }) });
+  });
+
+  it('reports missing when no file with that name exists at all', async () => {
+    const client = new FakeGoogleDriveClient({});
+    const gateway = new DriveGateway(client);
+    const result = await gateway.findUniqueUnderRoot('nope.png', ROOT);
+    expect(result).toEqual({ kind: 'missing' });
+  });
+
+  it('reports missing when a same-named file exists but only outside the configured root', async () => {
+    const client = new FakeGoogleDriveClient({
+      file_1: {
+        metadata: fakeMetadata({
+          id: 'file_1',
+          name: 'gate_closed_desktop_v1.png',
+          parents: ['some_other_folder'],
+        }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.findUniqueUnderRoot('gate_closed_desktop_v1.png', ROOT);
+    expect(result).toEqual({ kind: 'missing' });
+  });
+
+  it('reports ambiguous when more than one match actually lives under the root', async () => {
+    const client = new FakeGoogleDriveClient({
+      file_1: {
+        metadata: fakeMetadata({ id: 'file_1', name: 'dup.png', parents: [ROOT] }),
+        content: Buffer.alloc(0),
+      },
+      file_2: {
+        metadata: fakeMetadata({ id: 'file_2', name: 'dup.png', parents: [ROOT] }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.findUniqueUnderRoot('dup.png', ROOT);
+    expect(result.kind).toBe('ambiguous');
+    if (result.kind === 'ambiguous') expect(result.matches).toHaveLength(2);
+  });
+
+  it('ignores a trashed same-named file even if it would otherwise be under the root', async () => {
+    const client = new FakeGoogleDriveClient({
+      file_1: {
+        metadata: fakeMetadata({
+          id: 'file_1',
+          name: 'trashed.png',
+          parents: [ROOT],
+          trashed: true,
+        }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.findUniqueUnderRoot('trashed.png', ROOT);
+    expect(result).toEqual({ kind: 'missing' });
+  });
+});
+
+describe('DriveGateway.discoverPdfsInFolder', () => {
+  const FOLDER = 'folder_1';
+
+  function withFolder(children: Record<string, { metadata: ReturnType<typeof fakeMetadata> }>) {
+    const files: Record<string, { metadata: ReturnType<typeof fakeMetadata>; content: Buffer }> = {
+      [FOLDER]: {
+        metadata: fakeMetadata({
+          id: FOLDER,
+          name: 'Comic',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [ROOT],
+        }),
+        content: Buffer.alloc(0),
+      },
+    };
+    for (const [id, f] of Object.entries(children)) {
+      files[id] = { metadata: f.metadata, content: Buffer.alloc(0) };
+    }
+    return new FakeGoogleDriveClient(files);
+  }
+
+  it('finds the one PDF directly inside a folder proven under the root', async () => {
+    const gateway = new DriveGateway(
+      withFolder({
+        pdf_1: {
+          metadata: fakeMetadata({
+            id: 'pdf_1',
+            name: 'veoulla_comic.pdf',
+            mimeType: 'application/pdf',
+            parents: [FOLDER],
+          }),
+        },
+        img_1: {
+          metadata: fakeMetadata({
+            id: 'img_1',
+            name: 'cover.png',
+            mimeType: 'image/png',
+            parents: [FOLDER],
+          }),
+        },
+      }),
+    );
+    const result = await gateway.discoverPdfsInFolder(FOLDER, ROOT);
+    expect(result).toEqual({ kind: 'found', pdf: expect.objectContaining({ id: 'pdf_1' }) });
+  });
+
+  it('reports no_pdfs when the folder has children but none are PDFs', async () => {
+    const gateway = new DriveGateway(
+      withFolder({
+        img_1: {
+          metadata: fakeMetadata({
+            id: 'img_1',
+            name: 'cover.png',
+            mimeType: 'image/png',
+            parents: [FOLDER],
+          }),
+        },
+      }),
+    );
+    const result = await gateway.discoverPdfsInFolder(FOLDER, ROOT);
+    expect(result.kind).toBe('no_pdfs');
+  });
+
+  it('reports ambiguous and lists every candidate when more than one PDF exists', async () => {
+    const gateway = new DriveGateway(
+      withFolder({
+        pdf_1: {
+          metadata: fakeMetadata({
+            id: 'pdf_1',
+            name: 'comic_v1.pdf',
+            mimeType: 'application/pdf',
+            parents: [FOLDER],
+          }),
+        },
+        pdf_2: {
+          metadata: fakeMetadata({
+            id: 'pdf_2',
+            name: 'comic_v2.pdf',
+            mimeType: 'application/pdf',
+            parents: [FOLDER],
+          }),
+        },
+      }),
+    );
+    const result = await gateway.discoverPdfsInFolder(FOLDER, ROOT);
+    expect(result.kind).toBe('ambiguous');
+    if (result.kind === 'ambiguous') {
+      expect(result.pdfs.map((p) => p.name).sort()).toEqual(['comic_v1.pdf', 'comic_v2.pdf']);
+    }
+  });
+
+  it('reports folder_not_found when the folder ID is actually a file, not a folder', async () => {
+    const client = new FakeGoogleDriveClient({
+      not_a_folder: {
+        metadata: fakeMetadata({
+          id: 'not_a_folder',
+          name: 'oops.pdf',
+          mimeType: 'application/pdf',
+        }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.discoverPdfsInFolder('not_a_folder', ROOT);
+    expect(result.kind).toBe('folder_not_found');
+  });
+
+  it('reports folder_not_found when the folder exists but lives outside the configured root', async () => {
+    const client = new FakeGoogleDriveClient({
+      [FOLDER]: {
+        metadata: fakeMetadata({
+          id: FOLDER,
+          name: 'Comic',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: ['some_other_root'],
+        }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.discoverPdfsInFolder(FOLDER, ROOT);
+    expect(result).toEqual({
+      kind: 'folder_not_found',
+      reason: 'the folder is outside the configured Drive asset root',
+    });
+  });
+
+  it('accepts the configured asset root folder itself (its own parents is empty)', async () => {
+    const client = new FakeGoogleDriveClient({
+      [ROOT]: {
+        metadata: fakeMetadata({
+          id: ROOT,
+          name: 'Veoullas World Assets',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [],
+        }),
+        content: Buffer.alloc(0),
+      },
+      pdf_1: {
+        metadata: fakeMetadata({
+          id: 'pdf_1',
+          name: 'veoulla_comic.pdf',
+          mimeType: 'application/pdf',
+          parents: [ROOT],
+        }),
+        content: Buffer.alloc(0),
+      },
+    });
+    const gateway = new DriveGateway(client);
+    const result = await gateway.discoverPdfsInFolder(ROOT, ROOT);
+    expect(result).toEqual({ kind: 'found', pdf: expect.objectContaining({ id: 'pdf_1' }) });
+  });
+
+  it('reports folder_not_found when the folder ID does not resolve at all', async () => {
+    const client = new FakeGoogleDriveClient({});
+    const gateway = new DriveGateway(client);
+    const result = await gateway.discoverPdfsInFolder('missing_folder', ROOT);
+    expect(result.kind).toBe('folder_not_found');
+  });
+});
+
 describe('DriveGateway.getMetadata / getContentStream', () => {
   it('retries a transient (429) metadata failure and succeeds', async () => {
     const client = new FakeGoogleDriveClient({

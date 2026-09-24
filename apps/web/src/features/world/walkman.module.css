@@ -1,0 +1,230 @@
+/* The Walkman: a prominent bottom-right control (physical right, never mirrored) and its player panel. */
+.dock {
+  --walkman-size: clamp(68px, 10vmin, 104px);
+  position: absolute;
+  z-index: 8;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: var(--walkman-size);
+  height: var(--walkman-size);
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 10px rgb(20 14 9 / 55%));
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+.dock:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+.dock:active {
+  transform: scale(0.96);
+}
+.dock:focus-visible,
+.panel button:focus-visible,
+.panel input:focus-visible {
+  outline: 3px solid #ffe2a1;
+  outline-offset: 3px;
+}
+.art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  border: 1.5px solid var(--ctl-bronze);
+}
+/* A small living dot while music plays. */
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #7fe0a0;
+  box-shadow:
+    0 0 0 2px rgb(20 14 9 / 70%),
+    0 0 8px #7fe0a0;
+}
+@media (max-width: 720px) {
+  /* Narration owns the bottom edge on phones; the Walkman stays reachable above it. */
+  .dock[data-lifted='true'] {
+    bottom: calc(max(14px, env(safe-area-inset-bottom)) + 210px);
+  }
+}
+
+.panel {
+  position: absolute;
+  z-index: 9;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + clamp(68px, 10vmin, 104px) + 10px);
+  width: min(360px, calc(100% - 28px));
+  max-height: min(78%, 620px);
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  display: grid;
+  gap: 12px;
+  color: var(--ctl-ink);
+  border: 1.5px solid var(--ctl-bronze);
+  border-radius: 16px;
+  background: rgb(28 21 15 / 94%);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
+  backdrop-filter: blur(6px);
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgb(181 138 82 / 60%);
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.now {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seekRow,
+.volumeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.time {
+  min-width: 2.6rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  opacity: 0.85;
+}
+.slider {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  accent-color: #d9b174;
+  cursor: pointer;
+}
+.slider:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.control,
+.toggle {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgb(181 138 82 / 55%);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.primary {
+  width: 56px;
+  height: 56px;
+  background: #d9b174;
+  border-color: #d9b174;
+  color: #2a1e12;
+}
+.toggle[aria-pressed='true'] {
+  background: rgb(217 177 116 / 24%);
+  border-color: #ffe2a1;
+  color: #ffe2a1;
+}
+.control:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.listTitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgb(255 255 255 / 5%);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.track[data-active='true'] {
+  border-color: #ffe2a1;
+  background: rgb(217 177 116 / 22%);
+  font-weight: 700;
+}
+.trackMark {
+  width: 1rem;
+  text-align: center;
+  color: #ffe2a1;
+}
+.trackTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty {
+  margin: 0;
+  padding: 10px 4px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock {
+    transition: none;
+  }
+}

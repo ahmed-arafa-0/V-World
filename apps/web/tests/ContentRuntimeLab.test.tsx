@@ -138,7 +138,7 @@ describe('ContentRuntimeLab — icon mirroring is Sheet-driven, not automatic', 
   });
 });
 
-describe('ContentRuntimeLab — asset/voiceover status and diagnostics', () => {
+describe('ContentRuntimeLab — asset status and diagnostics', () => {
   it('shows asset status metadata without ever leaking a raw Drive file ID', async () => {
     renderLab();
     const assetList = await screen.findByTestId('asset-status-list');
@@ -147,11 +147,10 @@ describe('ContentRuntimeLab — asset/voiceover status and diagnostics', () => {
     expect(document.body.textContent).not.toMatch(/DRIVE_FILE_ID/);
   });
 
-  it('shows voice-over status metadata (locale/duration), not raw audio content', async () => {
+  it('never renders a voice-over status list — narration/dialogue is text-only', async () => {
     renderLab();
-    const voList = await screen.findByTestId('voiceover-status-list');
-    expect(voList).toHaveTextContent('vo_boot_en');
-    expect(voList).toHaveTextContent('2000ms');
+    await screen.findByTestId('asset-status-list');
+    expect(screen.queryByTestId('voiceover-status-list')).not.toBeInTheDocument();
   });
 
   it('surfaces content diagnostics for missing English fallback without leaking disabled content', async () => {

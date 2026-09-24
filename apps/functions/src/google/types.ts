@@ -11,8 +11,10 @@ export interface SpreadsheetMetadata {
  */
 export interface GoogleSheetsClient {
   getMetadata(): Promise<SpreadsheetMetadata>;
-  getValues(range: string): Promise<string[][]>;
+  getValues(range: string, valueRenderOption?: 'FORMULA'): Promise<string[][]>;
   batchGetValues(ranges: string[]): Promise<Record<string, string[][]>>;
   updateValues(range: string, values: string[][]): Promise<void>;
+  /** Several cell updates in ONE upstream request (optional: a client without it is written cell by cell). */
+  batchUpdateValues?(updates: { range: string; values: string[][] }[]): Promise<void>;
   appendValues(range: string, values: string[][]): Promise<void>;
 }

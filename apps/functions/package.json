@@ -5,13 +5,14 @@
   "type": "module",
   "main": "lib/index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "tsx watch src/local-server.ts",
+    "start": "node lib/production-server.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

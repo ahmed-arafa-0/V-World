@@ -11,11 +11,11 @@ function gatewayFor(workbook: Record<string, string[][]>): SheetGateway {
 }
 
 describe('computeSchemaHealth — healthy workbook', () => {
-  it('reports healthy overall status with exactly 42 expected tabs, allowing known placeholder warnings', async () => {
+  it('reports healthy overall status with exactly 44 expected tabs, allowing known placeholder warnings', async () => {
     const health = await computeSchemaHealth(gatewayFor(GOOD_WORKBOOK));
 
-    expect(health.summary.expectedTabCount).toBe(42);
-    expect(health.summary.foundTabCount).toBe(42);
+    expect(health.summary.expectedTabCount).toBe(44);
+    expect(health.summary.foundTabCount).toBe(44);
     expect(health.summary.errorCount).toBe(0);
     expect(['healthy', 'warning']).toContain(health.summary.status);
   });
@@ -66,7 +66,7 @@ describe('computeSchemaHealth — broken workbook', () => {
 
   it('detects a missing tab', async () => {
     const health = await computeSchemaHealth(gatewayFor(BROKEN_WORKBOOK));
-    expect(health.summary.foundTabCount).toBe(41);
+    expect(health.summary.foundTabCount).toBe(43);
     const missing = health.diagnostics.filter((d) => d.code === 'TAB_MISSING');
     expect(missing.some((d) => d.tab === '18_EVENT_PHASES')).toBe(true);
   });

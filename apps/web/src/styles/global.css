@@ -10,6 +10,20 @@
   --status-online: #2f7a4f;
   --status-warning: #9a6b1a;
   --status-offline: #a13b3b;
+  /* Player controls over painted scenes: warm ivory glyph, bronze rim, translucent dark backing. */
+  --ctl-ink: #fbf3dd;
+  --ctl-bronze: #b58a52;
+  --ctl-bronze-hover: #d9b174;
+  --ctl-backing: rgb(38 28 19 / 58%);
+  --ctl-backing-hover: rgb(46 34 22 / 76%);
+  --ctl-backing-pressed: rgb(28 20 13 / 84%);
+  --ctl-size: 44px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --ctl-size: 48px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

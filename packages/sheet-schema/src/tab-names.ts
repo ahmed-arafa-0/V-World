@@ -41,6 +41,8 @@ export const TAB_NAMES = [
   '39_VALIDATION_LISTS',
   '40_VAR_CONVERSATIONS',
   '41_VAR_MEMORIES',
+  '42_ARCADE_TRIVIA',
+  '43_COMPANION_HINTS',
 ] as const;
 
 export type TabName = (typeof TAB_NAMES)[number];

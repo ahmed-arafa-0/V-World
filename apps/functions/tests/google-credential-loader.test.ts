@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   loadGoogleServiceAccount,
   resolveCredentialPath,
@@ -59,5 +59,34 @@ describe('loadGoogleServiceAccount', () => {
     const resolved = resolveCredentialPath().replace(/\\/g, '/');
 
     expect(resolved).toMatch(/config-private\/google-service-account\.json$/);
+  });
+
+  describe('GOOGLE_SERVICE_ACCOUNT_PATH override', () => {
+    afterEach(() => {
+      delete process.env.GOOGLE_SERVICE_ACCOUNT_PATH;
+    });
+
+    it('uses the env var verbatim as the full file path when set, instead of the default dir', () => {
+      process.env.GOOGLE_SERVICE_ACCOUNT_PATH = '/etc/secrets/google-service-account.json';
+      expect(resolveCredentialPath()).toBe('/etc/secrets/google-service-account.json');
+    });
+
+    it('loads a real credential from the env-var path', () => {
+      process.env.GOOGLE_SERVICE_ACCOUNT_PATH = path.join(
+        fixturesDir,
+        'valid',
+        'google-service-account.json',
+      );
+      const result = loadGoogleServiceAccount();
+      expect(result.status).toEqual({
+        googleServiceAccount: { present: true, reason: 'configured' },
+      });
+    });
+
+    it('an explicit configDir argument (tests) still overrides the env var', () => {
+      process.env.GOOGLE_SERVICE_ACCOUNT_PATH = '/should/not/be/used.json';
+      const result = loadGoogleServiceAccount(path.join(fixturesDir, 'does-not-exist'));
+      expect(result.status.googleServiceAccount.present).toBe(false);
+    });
   });
 });

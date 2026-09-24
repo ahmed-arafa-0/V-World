@@ -1,0 +1,131 @@
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.prompt {
+  position: absolute;
+  right: 7%;
+  bottom: 7%;
+  width: min(390px, 40vw);
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid #ffe5b947;
+  border-radius: 16px;
+  background: #15222cdb;
+  color: #fff6e8;
+  box-shadow: 0 12px 45px #13232a40;
+  backdrop-filter: blur(12px);
+  text-align: start;
+  max-height: calc(100dvh - 90px);
+  overflow-y: auto;
+}
+.characterArt {
+  position: absolute;
+  left: 58%;
+  bottom: 10%;
+  width: clamp(110px, 12vw, 190px);
+  pointer-events: none;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 6px 3px #44352060);
+}
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+.field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #e4d6b777;
+  border-radius: 6px;
+  color: inherit;
+  background: #fff1;
+  font: inherit;
+  font-size: 1rem;
+}
+.prompt button {
+  justify-self: end;
+  min-height: 44px;
+  min-width: 112px;
+  padding: 8px 20px;
+  border: 1px solid #e7d8b7;
+  border-radius: 24px;
+  background: #ecdfc0;
+  color: #242b2e;
+  cursor: pointer;
+}
+.prompt :focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.collar {
+  justify-self: center;
+  padding: 8px;
+  color: #ffe3a6;
+  font-size: 1.4rem;
+}
+.error {
+  color: #ffe2b3;
+}
+@media (max-aspect-ratio: 1/1) {
+  .prompt {
+    right: 16px;
+    left: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: auto;
+    padding: 16px;
+    gap: 8px;
+    max-height: 48dvh;
+  }
+  .characterArt {
+    left: 74%;
+    bottom: 38%;
+    width: 24%;
+    max-height: 24dvh;
+    object-fit: contain;
+  }
+}
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .prompt {
+    bottom: 12px;
+    padding: 12px;
+    gap: 5px;
+  }
+}
+
+.genderGroup {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.85rem;
+}
+.genderGroup legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+.genderOption {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e4d6b777;
+  border-radius: 6px;
+  background: #fff1;
+  cursor: pointer;
+}
+.genderOption:has(input:checked) {
+  border-color: #ffd98a;
+  background: #ffd98a2b;
+}
+.genderOption input {
+  width: 20px;
+  height: 20px;
+  accent-color: #d9b174;
+}

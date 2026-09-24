@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { skipGateOpening } from './helpers/preGate';
 
 test.describe('Direct route refresh through the Hosting emulator', () => {
   test('reloading /admin does not 404 and re-renders the Admin login form', async ({ page }) => {
@@ -25,6 +26,7 @@ test.describe('Direct route refresh through the Hosting emulator', () => {
   });
 
   test('reloading / does not 404 and re-renders the Gate', async ({ page }) => {
+    await skipGateOpening(page);
     const response = await page.goto('/');
     expect(response?.ok()).toBe(true);
     await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();

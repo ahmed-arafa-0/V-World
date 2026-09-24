@@ -1,0 +1,46 @@
+.lab {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: start;
+}
+
+.section {
+  border: 1px solid var(--accent-muted);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.sectionTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.localeButton {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent-muted);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.localeButton[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-muted);
+}

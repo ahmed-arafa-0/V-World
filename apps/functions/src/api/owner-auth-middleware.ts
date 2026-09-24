@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { ApiError } from '@veoullas-world/contracts';
-import { httpStatusForCode } from '../errors/app-error.js';
+import { httpStatusForCode, toSafeApiError } from '../errors/app-error.js';
 import { clearSessionCookie, readSessionCookie, type CookieEnv } from '../http/cookies.js';
 import type { SheetGateway } from '../repositories/sheet-gateway.js';
 import { resolveActiveSession } from '../services/session-resolution.service.js';
@@ -40,7 +40,15 @@ export function createOwnerAuthMiddleware(
     }
 
     const sessionId = readSessionCookie(req, 'owner');
-    const resolution = await resolveActiveSession(gateway, 'owner', sessionId, now());
+    let resolution: Awaited<ReturnType<typeof resolveActiveSession>>;
+    try {
+      resolution = await resolveActiveSession(gateway, 'owner', sessionId, now());
+    } catch (error) {
+      const safe = toSafeApiError(error);
+      const body: ApiError = { ok: false, code: safe.code, message: safe.message };
+      res.status(safe.httpStatus).json(body);
+      return;
+    }
 
     if (!resolution.ok) {
       clearSessionCookie(res, 'owner', cookieEnv());
@@ -52,6 +60,12 @@ export function createOwnerAuthMiddleware(
       res.status(httpStatusForCode(resolution.code)).json(error);
       return;
     }
+
+    // Downstream player-state handlers need to know WHICH user this is —
+    // always from the resolved session row, never from a client-supplied
+    // body/query field, so one player can never read or mutate another's
+    // state. `res.locals` is the idiomatic Express place for this.
+    res.locals.ownerUserId = resolution.row.user_id ?? '';
 
     next();
   };

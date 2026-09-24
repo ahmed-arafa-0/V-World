@@ -25,6 +25,7 @@ export function httpStatusForCode(code: ApiErrorCode): number {
       return 400;
     case 'SHEET_ACCESS_DENIED':
     case 'SESSION_FORBIDDEN':
+    case 'WORLD_LOCKED':
       return 403;
     case 'backend_not_configured':
     case 'GOOGLE_CONFIG_NOT_FOUND':
@@ -36,6 +37,8 @@ export function httpStatusForCode(code: ApiErrorCode): number {
       return 429;
     case 'DUPLICATE_PRIMARY_KEY':
     case 'SHEET_WRITE_CONFLICT':
+    case 'WORLD_INVALID_STATE':
+    case 'WORLD_CONTENT_UNAVAILABLE':
       return 409;
     case 'INVALID_GATE_CODE':
     case 'INVALID_ADMIN_CREDENTIALS':

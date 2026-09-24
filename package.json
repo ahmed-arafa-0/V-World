@@ -20,14 +20,46 @@
     "build": "npm run build:libs && npm run build --workspace=apps/functions && npm run build --workspace=apps/web",
     "test": "npm run build:libs && npm run test --workspace=packages/sheet-schema && npm run test --workspace=apps/functions && npm run test --workspace=apps/web",
     "test:e2e": "playwright test",
+    "test:e2e:log": "node scripts/run-e2e-with-log.mjs",
     "test:m01:live": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m01-live.mjs",
     "preflight:m02": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m02-preflight.mjs",
     "seed:m02": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-m02-access-config.mjs",
     "test:m02:live": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m02-live-auth.mjs",
     "preflight:m03b1": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/test-m03b1-preflight.mjs",
+    "preflight:phase1:map-assets": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/preflight-phase1-map-assets.mjs",
+    "seed:phase1:map-assets": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-phase1-map-assets.mjs",
+    "seed:phase1:scene-assets": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-phase1-scene-assets.mjs",
+    "seed:phase1:icons": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-phase1-scene-icons.mjs",
+    "seed:phase1:ui-text": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-phase1-player-ui-text.mjs",
+    "verify:phase1:map-media-browser": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/verify-phase1-map-media-browser.mjs",
+    "verify:phase1:full-app": "npm run build && node scripts/verify-phase1-full-app-browser.mjs",
+    "verify:phase1:real-art": "npm run build && node scripts/verify-phase1-real-art-browser.mjs",
+    "verify:phase1:d:player-state": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/verify-phase1-d-player-state.mjs",
+    "seed:phase2:art": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-phase2-art-assets.mjs",
+    "seed:birthday:art": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-birthday-art-assets.mjs",
+    "seed:birthday:event": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-birthday-event-content.mjs",
+    "inspect:birthday:live": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/inspect-birthday-live.mjs",
+    "verify:birthday:window": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/verify-birthday-window-live.mjs",
+    "birthday:preview": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/birthday-preview.mjs",
+    "seed:church-candle-patch": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-church-candle-patch-assets.mjs",
+    "seed:church-audio-media": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-church-audio-media.mjs",
+    "seed:content-banks-v1": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-content-banks-v1.mjs",
+    "seed:comic-source": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-comic-source.mjs",
+    "seed:comic-source-from-folder": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-comic-source-from-folder.mjs",
+    "seed:archive-site": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-archive-site.mjs",
+    "enable:dialogue-groups": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/enable-dialogue-groups.mjs",
+    "seed:church-story-images": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-church-story-images.mjs",
+    "seed:phase2:config": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/seed-phase2-config.mjs",
+    "art:derivatives": "python scripts/build-art-derivatives.py",
+    "preview:phase2": "npm run build && node scripts/serve-phase2-preview.mjs",
+    "verify:phase2:browser": "npm run build && node scripts/verify-phase2-browser.mjs",
+    "verify:phase2:art-prep": "npm run build && node scripts/verify-phase2-art-prep.mjs",
+    "verify:icons": "npm run build && node scripts/verify-icons-visual.mjs",
     "audit:entry-log-events": "npm run build:libs && npm run build --workspace=apps/functions && node scripts/audit-entry-log-event-types.mjs",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:functions": "npm run dev --workspace=apps/functions",
+    "start:free-hosting": "npm run build && npm run start --workspace=apps/functions",
+    "preview:local": "node scripts/serve-local-preview.mjs",
     "emulators": "firebase emulators:start --only hosting,functions",
     "emulators:build": "npm run build:libs && npm run build --workspace=apps/web && npm run build --workspace=apps/functions && npm run emulators",
     "security:scan": "node scripts/security-boundary-scan.mjs"
@@ -46,6 +78,11 @@
     "typescript-eslint": "^8.8.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0 <23.0.0"
+  },
+  "overrides": {
+    "firebase-tools": {
+      "tar": "^7.5.21"
+    }
   }
 }

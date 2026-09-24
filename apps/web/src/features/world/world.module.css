@@ -1,0 +1,1557 @@
+.world {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #1c150f;
+  color: var(--ctl-ink);
+  font-family: inherit;
+}
+.ownedDecor {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -100%);
+  min-width: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.ownedDecor img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 3px 3px rgb(40 20 5 / 25%));
+}
+.ownedDecor:focus-visible {
+  outline: 2px solid #e6bd60;
+  outline-offset: 3px;
+}
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+.painting {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+.temporary {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--tmp-bg);
+}
+.stage[data-theme='church'] {
+  --tmp-bg:
+    radial-gradient(ellipse 30% 45% at 50% 30%, rgb(255 226 160 / 55%), transparent 70%),
+    linear-gradient(#5b4a44, #8a7565 55%, #4a3a33);
+}
+.stage[data-theme='cafe'] {
+  --tmp-bg:
+    radial-gradient(ellipse 40% 30% at 30% 30%, rgb(255 190 110 / 45%), transparent 70%),
+    linear-gradient(#5a3520, #8a5a35 60%, #3e2414);
+}
+.stage[data-theme='arcade'] {
+  --tmp-bg:
+    radial-gradient(ellipse 60% 30% at 50% 70%, rgb(255 60 200 / 35%), transparent 70%),
+    linear-gradient(#1c1240, #3b1e78 60%, #140a30);
+}
+.stage[data-theme='cottage'] {
+  --tmp-bg:
+    radial-gradient(ellipse 35% 35% at 75% 30%, rgb(255 230 180 / 50%), transparent 70%),
+    linear-gradient(#a98c6c, #d9c19c 55%, #8a6a4a);
+}
+.stage[data-theme='farm'] {
+  --tmp-bg: linear-gradient(#9fd3f0 0%, #e7f2c9 38%, #86b04b 39%, #557a2b 100%);
+}
+.stage[data-theme='museum'] {
+  --tmp-bg:
+    radial-gradient(ellipse 40% 40% at 50% 25%, rgb(255 233 170 / 50%), transparent 70%),
+    linear-gradient(#cbd0d8, #e8e2d2 55%, #8b8577);
+}
+.stage[data-theme='hall'] {
+  --tmp-bg:
+    radial-gradient(ellipse 30% 40% at 50% 45%, rgb(190 230 255 / 45%), transparent 70%),
+    linear-gradient(#2a3450, #465577 60%, #1d2338);
+}
+.stage[data-theme='road'] {
+  --tmp-bg: linear-gradient(#b9d9ee, #e7dcc1 45%, #b9a47c 46%, #8f7c58);
+}
+.stage[data-theme='map'] {
+  --tmp-bg:
+    radial-gradient(ellipse 45% 35% at 50% 50%, #86b04b 0 55%, #c9b57c 56% 60%, transparent 61%),
+    linear-gradient(#2a8aa6, #1f6f8a);
+}
+.stage[data-tone='night'] .temporary {
+  filter: brightness(0.55) saturate(0.85);
+}
+.stage[data-tone='dusk'] .temporary {
+  filter: sepia(0.35) saturate(1.2) brightness(0.85);
+}
+.tempBadge {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: min(92vw, 520px);
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #fbf3dd;
+  background: rgb(38 28 19 / 72%);
+  border: 1px dashed rgb(217 177 116 / 70%);
+  pointer-events: none;
+}
+.placeTitle {
+  position: absolute;
+  z-index: 3;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  background: rgb(38 28 19 / 58%);
+  border: 1px solid rgb(181 138 82 / 65%);
+  backdrop-filter: blur(3px);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.hotspot {
+  position: absolute;
+  z-index: 4;
+  width: var(--ctl-size);
+  height: var(--ctl-size);
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1.5px solid var(--ctl-bronze);
+  border-radius: 50%;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  box-shadow:
+    0 2px 10px rgb(23 17 11 / 38%),
+    inset 0 0 0 1px rgb(255 248 230 / 8%);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.12s,
+    opacity 0.2s;
+}
+.hotspot:hover:not(:disabled) {
+  background: var(--ctl-backing-hover);
+  border-color: var(--ctl-bronze-hover);
+}
+.hotspot:active:not(:disabled) {
+  background: var(--ctl-backing-pressed);
+  transform: translate(-50%, -50%) scale(0.94);
+}
+.hotspot:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.hotspot:focus-visible,
+.textButton:focus-visible,
+.actionButton:focus-visible,
+.quietButton:focus-visible {
+  outline: 2px solid var(--ctl-ink);
+  outline-offset: 3px;
+}
+.hotspot.lit {
+  border-color: #ffd98a;
+  background: radial-gradient(circle, rgb(255 205 100 / 70%), var(--ctl-backing) 70%);
+  box-shadow: 0 0 18px 4px rgb(255 190 80 / 55%);
+}
+.hotspotIcon {
+  width: 26px;
+  height: 26px;
+  display: block;
+  filter: drop-shadow(0 1px 1.5px rgb(23 17 11 / 70%));
+}
+.badge {
+  position: absolute;
+  top: -6px;
+  inset-inline-end: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-size: 0.7rem;
+  line-height: 18px;
+  text-align: center;
+  color: #221a12;
+  background: #ffd98a;
+}
+.captioned {
+  position: absolute;
+  z-index: 4;
+  width: 0;
+  height: 0;
+}
+.captioned > .hotspot {
+  left: 0;
+  top: 0;
+}
+.caption {
+  position: absolute;
+  top: calc(var(--ctl-size) / 2 + 6px);
+  left: 0;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(44vw, 220px);
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgb(38 28 19 / 68%);
+  pointer-events: none;
+}
+.hud {
+  position: absolute;
+  z-index: 6;
+  top: max(10px, env(safe-area-inset-top));
+  /* Physical left: the world's geography and its controls are never mirrored for RTL. */
+  left: max(10px, env(safe-area-inset-left));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 140px);
+}
+.keyChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 9px 0 5px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  background: var(--ctl-backing);
+  border: 1px solid rgb(181 138 82 / 65%);
+}
+.keyChip[data-empty='true'] {
+  opacity: 0.45;
+}
+.keyImg {
+  width: 20px;
+  height: 20px;
+}
+.mapButton {
+  position: absolute;
+  z-index: 6;
+  top: calc(max(10px, env(safe-area-inset-top)) + var(--ctl-size) + 10px);
+  right: max(10px, env(safe-area-inset-right));
+}
+.walkman {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Wide screens: never reach the centred place title, however long the song title is. */
+  max-width: clamp(96px, calc(50vw - 400px), 260px);
+  height: 30px;
+  padding: 0 12px 0 4px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  background: var(--ctl-backing);
+  border: 1px solid rgb(181 138 82 / 65%);
+}
+.walkmanTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toast {
+  position: absolute;
+  z-index: 9;
+  top: calc(max(10px, env(safe-area-inset-top)) + 46px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90vw;
+  padding: 8px 16px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  text-align: center;
+  background: rgb(38 28 19 / 88%);
+  border: 1px solid #ffd98a;
+  animation: toastIn 0.25s ease-out;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+.panelBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: end center;
+  padding: 0;
+  background: rgb(20 14 9 / 45%);
+}
+.panel {
+  width: min(100%, 560px);
+  max-height: min(82vh, 640px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px 18px 0 0;
+  background: #2a2016;
+  border: 1px solid rgb(181 138 82 / 65%);
+  border-bottom: 0;
+  box-shadow: 0 -10px 40px rgb(0 0 0 / 40%);
+}
+.panelWide {
+  width: min(100%, 820px);
+}
+@media (min-width: 720px) {
+  .panelBackdrop {
+    place-items: center;
+    padding: 24px;
+  }
+  .panel {
+    border-radius: 18px;
+    border-bottom: 1px solid rgb(181 138 82 / 65%);
+  }
+}
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid rgb(181 138 82 / 30%);
+}
+.panelHeader h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.panelBody {
+  padding: 12px 16px 18px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.textButton,
+.actionButton,
+.quietButton {
+  min-height: 40px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ctl-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  border: 1.5px solid var(--ctl-bronze);
+}
+.textButton {
+  background: transparent;
+  min-height: 32px;
+  padding: 2px 12px;
+}
+.actionButton {
+  background: linear-gradient(#7a5a30, #5c4222);
+}
+.quietButton {
+  background: var(--ctl-backing);
+}
+.actionButton:disabled,
+.quietButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.textBlock {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.muted {
+  opacity: 0.75;
+  font-size: 0.85rem;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgb(255 248 230 / 7%);
+  border: 1px solid rgb(181 138 82 / 30%);
+}
+.cardTitle {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.input {
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font: inherit;
+  color: inherit;
+  background: rgb(0 0 0 / 30%);
+  border: 1px solid rgb(181 138 82 / 55%);
+}
+.companion {
+  position: absolute;
+  z-index: 2;
+  right: 14%;
+  bottom: 6%;
+  width: clamp(72px, 14vw, 160px);
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 35%));
+}
+.companionHintButton {
+  position: absolute;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  background: #f3e2b8;
+  border: 2px solid #b58a52;
+  font-size: 1.1rem;
+  line-height: 1;
+  transform: translate(30%, -110%);
+  cursor: pointer;
+}
+.companionHintBubble {
+  position: absolute;
+  z-index: 4;
+  max-width: 240px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffaf0;
+  border: 2px solid #b58a52;
+  color: #221a12;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 25%);
+}
+.narration {
+  position: absolute;
+  z-index: 7;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgb(20 14 9 / 82%) 40%);
+}
+.narrationLine {
+  margin: 0;
+  max-width: 640px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  text-align: center;
+}
+.optionGrid {
+  display: grid;
+  gap: 8px;
+}
+.option {
+  text-align: start;
+}
+.option[data-state='wrong'] {
+  border-color: #d97a6a;
+}
+.option[data-state='right'] {
+  border-color: #8fd18f;
+}
+.plots {
+  position: absolute;
+  z-index: 4;
+  inset-inline: 6%;
+  top: 44%;
+  bottom: 22%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-content: center;
+}
+.plot {
+  min-height: 64px;
+  border-radius: 14px;
+  padding: 6px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ctl-ink);
+  cursor: pointer;
+  background: rgb(60 38 18 / 70%);
+  border: 2px solid #7a5a30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.plot[data-state='ready'] {
+  border-color: #ffd98a;
+  box-shadow: 0 0 12px rgb(255 205 100 / 55%);
+}
+.plot[data-state='wilted'] {
+  border-color: #b98a6a;
+  filter: saturate(0.5);
+}
+.meter {
+  width: 80%;
+  height: 5px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 40%);
+  overflow: hidden;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  background: #9bd46a;
+}
+.cabinets {
+  position: absolute;
+  z-index: 4;
+  inset-inline: 0;
+  margin-inline: auto;
+  width: min(94%, 640px);
+  top: 34%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.cabinet {
+  aspect-ratio: 3 / 5;
+  border-radius: 12px 12px 4px 4px;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--ctl-ink);
+  cursor: pointer;
+  background: linear-gradient(#3a2a70, #1c1240);
+  border: 2px solid #8f6dff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  text-align: center;
+}
+.cabinet[data-locked='true'] {
+  filter: grayscale(0.7) brightness(0.7);
+}
+.cabinet[data-empty='true'] {
+  border-style: dashed;
+  background: rgb(20 10 50 / 60%);
+}
+.gameArea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.cardGrid {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 420px;
+}
+.memoryCard {
+  aspect-ratio: 1;
+  min-width: 64px;
+  min-height: 64px;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 10px;
+  font-size: 2.4rem;
+  cursor: pointer;
+  color: #221a12;
+  background: #f3e2b8;
+  border: 2px solid #b58a52;
+}
+.memoryCard[data-face='down'] {
+  color: transparent;
+  background: repeating-linear-gradient(45deg, #5c4222, #5c4222 6px, #7a5a30 6px, #7a5a30 12px);
+}
+.memoryCard[data-face='matched'] {
+  opacity: 0.55;
+}
+.catchField {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 300px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(#5a7fb0, #cfe0c0);
+  touch-action: none;
+}
+.faller {
+  position: absolute;
+  font-size: 1.6rem;
+}
+.basket {
+  position: absolute;
+  bottom: 6px;
+  width: 48px;
+  height: 22px;
+  border-radius: 0 0 24px 24px;
+  background: #7a5a30;
+  border: 2px solid #b58a52;
+}
+.puzzleGrid {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  max-width: 320px;
+}
+.tile {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #221a12;
+  cursor: pointer;
+  border: 2px solid #b58a52;
+}
+.tile[data-blank='true'] {
+  background: transparent;
+  border-style: dashed;
+  cursor: default;
+}
+.mazeGrid {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  max-width: 360px;
+  background: #221a12;
+  border: 2px solid #221a12;
+  touch-action: manipulation;
+}
+.mazeCell {
+  aspect-ratio: 1;
+  min-width: 28px;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  background: #f3e2b8;
+  border-color: #221a12;
+  border-style: solid;
+  border-width: 0;
+  padding: 0;
+}
+.mazeCell[data-player] {
+  background: #7fae6a;
+}
+.mazeCell[data-goal] {
+  background: #e0b060;
+}
+.sockets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.socket {
+  min-height: 64px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ctl-ink);
+  cursor: pointer;
+  background: rgb(0 0 0 / 30%);
+  border: 2px dashed #b58a52;
+}
+.socket[data-seated='true'] {
+  border-style: solid;
+  background: rgb(255 205 100 / 25%);
+}
+.artifact {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 42%;
+  width: 90px;
+  height: 90px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d0, #d9b174 45%, #6f5230);
+  box-shadow: 0 0 40px 10px rgb(255 226 150 / 45%);
+  animation: pulse 3.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 60px 18px rgb(255 226 150 / 60%);
+  }
+}
+.mapPin {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.mist {
+  position: absolute;
+  z-index: 3;
+  width: 90px;
+  height: 64px;
+  transform: translate(-50%, -70%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(240 246 250 / 85%), rgb(240 246 250 / 0%) 70%);
+  pointer-events: none;
+}
+.avatar {
+  position: absolute;
+  z-index: 5;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff6d0;
+  border: 3px solid #b58a52;
+  box-shadow: 0 0 10px rgb(255 226 150 / 80%);
+  transition:
+    left 0.9s ease-in-out,
+    top 0.9s ease-in-out;
+}
+.avatar[data-state='walking'] {
+  animation: bob 0.35s ease-in-out infinite alternate;
+}
+@keyframes bob {
+  to {
+    margin-top: -4px;
+  }
+}
+.roadPath {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mapFade {
+  animation: mapIn 0.9s ease-out;
+}
+@keyframes mapIn {
+  from {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+.countdown {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+.countdown strong {
+  display: block;
+  font-size: 1.3rem;
+}
+.frame {
+  padding: 10px;
+  text-align: center;
+  border: 4px double #b58a52;
+  border-radius: 6px;
+  background: rgb(255 248 230 / 8%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .artifact,
+  .mapFade,
+  .avatar[data-state='walking'] {
+    animation: none;
+  }
+  .avatar {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .placeTitle {
+    top: calc(max(12px, env(safe-area-inset-top)) + 112px);
+    font-size: 0.85rem;
+  }
+  .keyChip {
+    height: 26px;
+    padding: 0 7px 0 4px;
+    font-size: 0.75rem;
+  }
+  .walkman {
+    height: 26px;
+    max-width: min(60vw, 260px);
+  }
+}
+
+.sfxNote {
+  position: absolute;
+  z-index: 3;
+  top: calc(max(12px, env(safe-area-inset-top)) + 40px);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.8;
+  pointer-events: none;
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .sfxNote {
+    top: calc(max(12px, env(safe-area-inset-top)) + 122px);
+  }
+}
+
+@media (max-width: 720px) {
+  .toast {
+    top: calc(max(10px, env(safe-area-inset-top)) + 122px);
+  }
+}
+
+.audioChip {
+  position: absolute;
+  z-index: 7;
+  /* A corner, never the centre: the centre bottom of the Beach holds the shell and other markers. */
+  right: 12px;
+  bottom: calc(max(8px, env(safe-area-inset-bottom)) + 4px);
+  min-height: 32px;
+  font-size: 0.8rem;
+}
+
+.hotspot[data-gated='true'] {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+/* Artwork placed on its own painted plane (sized and offset in px by the Stage). */
+.paintingPlane {
+  position: absolute;
+  max-width: none;
+  z-index: -1;
+}
+.marcelino {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 35%));
+}
+.marcelinoStandIn {
+  position: absolute;
+  z-index: 2;
+  left: 32%;
+  top: 84%;
+  transform: translate(-50%, -100%);
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  pointer-events: none;
+}
+
+/* Painted farm beds: invisible tap targets on the soil, crop sprite standing on the ground point. */
+.bed {
+  position: absolute;
+  z-index: 4;
+  /* The button is the bed's footprint, centred on the ground point; the plant stands on that point. */
+  transform: translate(-50%, -50%);
+  padding: 0;
+  font: inherit;
+  color: var(--ctl-ink);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.bed:focus-visible {
+  outline: 3px solid #ffd98a;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.bedSprite {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 35%));
+}
+.bed[data-state='ready'] .bedSprite {
+  filter: drop-shadow(0 0 10px rgb(255 205 100 / 85%));
+}
+.bed[data-state='empty'] {
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0%);
+  border: 2px dashed rgb(255 240 200 / 55%);
+}
+.bed[data-state='empty']:hover {
+  background: rgb(255 240 200 / 14%);
+}
+.bedTag {
+  position: absolute;
+  bottom: 2px;
+  left: 15%;
+  width: 70%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Cabinets, candles and other overlays that sit on painted art keep their painted look. */
+.paintedCabinet {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  font: inherit;
+  color: var(--ctl-ink);
+  cursor: pointer;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 10px 10px 4px 4px;
+}
+.paintedCabinet:hover,
+.paintedCabinet:focus-visible {
+  border-color: #ffd98a;
+  background: rgb(255 240 200 / 10%);
+}
+.paintedCabinet[data-locked='true'] {
+  background: rgb(10 5 30 / 38%);
+}
+.paintedCabinet[data-empty='true'] {
+  cursor: default;
+  background: rgb(10 5 30 / 45%);
+}
+.cabinetTag {
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-align: center;
+  background: rgb(38 28 19 / 82%);
+  border: 1px solid rgb(181 138 82 / 70%);
+}
+.candleSlot {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  transform: translate(-50%, -100%);
+}
+.candleSlot img {
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 40%));
+}
+.candleSlot:focus-visible {
+  outline: 3px solid #ffd98a;
+  border-radius: 8px;
+}
+.artifactArt {
+  position: absolute;
+  z-index: 4;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.artifactArt img {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 40%));
+  animation: pulseArt 3.2s ease-in-out infinite;
+}
+.artifactArt:focus-visible {
+  outline: 3px solid #ffd98a;
+  border-radius: 12px;
+}
+@keyframes pulseArt {
+  50% {
+    filter: drop-shadow(0 0 22px rgb(255 226 150 / 70%));
+  }
+}
+/* Each field follows its own painted compartment, including the slight mantel slope. */
+.mantelField {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2%;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  color: #ffe9b8;
+  font-family: Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  direction: ltr;
+}
+.mantelDigits {
+  font-weight: 700;
+}
+.mantelUnit {
+  display: block;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #fff3d6;
+}
+.mantelField:focus-visible {
+  outline: 2px solid #ffe9b8;
+}
+.walkmanArt {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+.avatarArt {
+  position: absolute;
+  z-index: 5;
+  width: clamp(16px, 4%, 32px);
+  transform: translate(-50%, -92%);
+  transition:
+    left 0.9s ease-in-out,
+    top 0.9s ease-in-out;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 45%));
+}
+.avatarArt[data-state='walking'] {
+  animation: bob 0.35s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatarArt,
+  .artifactArt img {
+    animation: none;
+    transition: none;
+  }
+}
+.cabinets:has(.paintedCabinet) {
+  display: contents;
+}
+.plots[data-painted='true']:empty {
+  display: none;
+}
+
+.candleSlot[data-lit='true'] img {
+  filter: drop-shadow(0 0 10px rgb(255 190 90 / 90%));
+}
+
+@media (max-width: 900px) and (max-aspect-ratio: 1/1) {
+  /* Portrait: the place title sits below the HUD rows, so the arcade's effects note goes just under it. */
+  .sfxNote {
+    top: calc(max(12px, env(safe-area-inset-top)) + 146px);
+  }
+}
+
+/* Startup failure / slow start: explicit, readable, with a way out. */
+.startNotice {
+  position: absolute;
+  inset: auto 16px 24px 16px;
+  z-index: 20;
+  margin: 0 auto;
+  max-width: 420px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(20, 24, 30, 0.82);
+  color: #fff;
+  text-align: center;
+}
+
+/* A local action is in flight: a small, non-blocking hint that never replaces the scene. */
+.pending {
+  position: absolute;
+  z-index: 19;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(20, 24, 30, 0.78);
+  color: #fff;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+.paintRetry {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(20, 24, 30, 0.85);
+  color: #fff;
+  text-align: center;
+}
+
+.cardArt {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* A Continue with no panel around it: used when there is no text to put in one. */
+.bareContinue {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  bottom: calc(max(24px, env(safe-area-inset-bottom)) + 40px);
+  transform: translateX(-50%);
+}
+
+/* ---- Map: image-space plane (letter-boxed like the painting, transparent padding included) ---- */
+.mapArea {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  pointer-events: none;
+}
+.mapPlane {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(100cqw, calc(100cqh * 1792 / 2128));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.mapPlane > * {
+  pointer-events: auto;
+}
+.mapIsland {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  .mapPlane .caption {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+  }
+  .mapPlane .hotspot {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ---- HUD: map symbol button, sits under the language/logout cluster ---- */
+.mapButton {
+  position: absolute;
+  z-index: 6;
+  top: calc(max(10px, env(safe-area-inset-top)) + 52px);
+  right: max(10px, env(safe-area-inset-right));
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  border: 1.5px solid var(--ctl-bronze);
+  cursor: pointer;
+}
+.mapButton:hover {
+  background: var(--ctl-backing-hover);
+}
+.mapButton:focus-visible {
+  outline: 3px solid #ffe2a1;
+  outline-offset: 2px;
+}
+.mapIcon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+/* ---- HUD: achievements button, stacks under the map button ---- */
+.achievementsButton {
+  position: absolute;
+  z-index: 6;
+  top: calc(max(10px, env(safe-area-inset-top)) + 104px);
+  right: max(10px, env(safe-area-inset-right));
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  border: 1.5px solid var(--ctl-bronze);
+  cursor: pointer;
+  font-size: 22px;
+}
+.achievementsButton:hover {
+  background: var(--ctl-backing-hover);
+}
+.achievementsButton:focus-visible {
+  outline: 3px solid #ffe2a1;
+  outline-offset: 2px;
+}
+.hud {
+  max-width: calc(100% - 280px);
+}
+@media (max-width: 480px) {
+  .hud {
+    max-width: calc(100% - 226px);
+  }
+}
+
+/* ---- Beach ocean view ---- */
+.ocean {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: #06222f;
+  display: grid;
+  place-items: center;
+}
+.oceanVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.oceanNote {
+  position: relative;
+  z-index: 1;
+  max-width: min(420px, 86%);
+  padding: 14px 18px;
+  text-align: center;
+  color: #fff7e9;
+  border-radius: 12px;
+  background: rgb(20 14 9 / 70%);
+}
+.oceanBack {
+  position: absolute;
+  z-index: 2;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 1rem;
+  color: #fff7e9;
+  background: rgb(20 14 9 / 72%);
+  border: 1.5px solid #e3c48e;
+  border-radius: 24px;
+  cursor: pointer;
+}
+.oceanBack:focus-visible {
+  outline: 3px solid #ffe2a1;
+  outline-offset: 3px;
+}
+
+/* ---- Candle corner (close-up) ---- */
+.candleRow {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 26%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+  gap: clamp(8px, 3vw, 28px);
+  width: min(92%, 640px);
+}
+.candleRow .candleSlot {
+  position: static;
+  transform: none;
+  height: clamp(120px, 34vh, 300px);
+  padding: 0;
+}
+.candleRow .candleSlot img {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+.candleStandIn {
+  display: block;
+  width: 22px;
+  height: 100%;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(#efe3c4, #cdb98c);
+  position: relative;
+}
+.candleStandIn[data-flame='on']::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  width: 12px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+  background: radial-gradient(#fff6c0, #ffb13a 65%, transparent);
+  box-shadow: 0 0 22px 8px rgb(255 178 60 / 55%);
+}
+
+/* ---- Candle corner: perspective tray, per-candle placement, selection and Add/Remove ---- */
+.candleTray {
+  position: absolute;
+  z-index: 3;
+}
+.candleFeedback {
+  position: absolute;
+  z-index: 8;
+  top: max(55px, 9%);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(88%, 520px);
+  padding: 10px 14px;
+  border: 1px solid #edc37e;
+  border-radius: 12px;
+  background: rgb(42 25 12 / 94%);
+  color: #fff6dd;
+  text-align: center;
+}
+.candleFeedback p {
+  margin: 0 0 8px;
+}
+.candleFeedback button {
+  min-height: 44px;
+  padding: 6px 18px;
+}
+.candlePlaced {
+  position: absolute;
+}
+/* Without registered close-up art (no measured plane yet) the tray falls back to a plain centred row,
+   the same graceful-without-art pattern used elsewhere in the world. */
+.candleTrayFallback {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 26%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(8px, 3vw, 24px);
+  width: min(92%, 640px);
+}
+.candlePlacedFallback {
+  position: static;
+}
+.candlePlacedFallback .candleSlot {
+  position: static;
+  transform: none;
+}
+.candlePlaced .candleSlot {
+  left: 0;
+  top: 0;
+}
+.candlePlaced[data-selected='true'] .candleSlot {
+  filter: drop-shadow(0 0 14px rgb(255 226 161 / 85%));
+}
+.candleShadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgb(20 14 9 / 42%), transparent 70%);
+  pointer-events: none;
+  z-index: 2;
+}
+.candleControls {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 15%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(92%, 560px);
+}
+.candleActionBtn {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  border: 1.5px solid var(--ctl-bronze);
+  cursor: pointer;
+}
+.candleActionBtn:hover:not(:disabled) {
+  background: var(--ctl-backing-hover);
+  border-color: var(--ctl-bronze-hover);
+}
+.candleActionBtn:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+.candleActionIcon {
+  width: 24px;
+  height: 24px;
+}
+.candleChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 340px;
+}
+.candleChip {
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  border: 1.5px solid rgb(181 138 82 / 65%);
+  cursor: pointer;
+}
+.candleChip[data-lit='true'] {
+  border-color: rgb(255 190 90 / 80%);
+}
+.candleChip[aria-pressed='true'] {
+  border-color: #ffe2a1;
+  background: rgb(217 177 116 / 30%);
+  box-shadow: 0 0 8px rgb(255 226 161 / 55%);
+}
+.candleChip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.candleControls :focus-visible,
+.candlePlaced :focus-visible {
+  outline: 3px solid #ffd98a;
+  outline-offset: 2px;
+}
+
+/* ---- Arcade cabinet screens: readable name + state ---- */
+.cabinetTag {
+  font-size: clamp(0.72rem, 1.05vw, 0.92rem);
+}
+.cabinetName {
+  font-weight: 700;
+  font-size: clamp(0.78rem, 1.15vw, 1rem);
+  max-width: 96%;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Farm: empty plots read as planting targets; planted ones name their crop and state ---- */
+.bed[data-state='empty'] {
+  border: 2px dashed #fff6d8;
+  box-shadow:
+    0 0 0 1px rgb(40 26 12 / 55%),
+    inset 0 0 0 1px rgb(40 26 12 / 35%);
+  background: rgb(255 240 200 / 12%);
+  display: grid;
+  place-items: center;
+}
+.bedPlus {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #2a1e12;
+  background: rgb(255 246 216 / 92%);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 45%);
+}
+.bed[data-selected='true'] {
+  outline: 3px solid #ffd98a;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.bedChip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px 3px;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  background: rgb(38 28 19 / 82%);
+  border: 1px solid rgb(181 138 82 / 70%);
+}
+
+/* Compact targets for the Cottage shelves in a short landscape crop. */
+.compactDecor {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+}
+.compactDecor > button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}

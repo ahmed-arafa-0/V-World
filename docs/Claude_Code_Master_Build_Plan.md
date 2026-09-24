@@ -253,29 +253,31 @@ Every milestone must satisfy all applicable items:
 - Refresh resumes a valid session.
 - Expired/terminated session returns safely to the appropriate entry.
 
-## M03 — Localization, Direction, Icons, Assets, and Voice-over Runtime
+## M03 — Localization, Direction, Icons, Assets, and Narration Runtime
+
+**2026-09-17 superseding note:** Ahmed removed voice-over from the entire experience (Living Bible §3A-1). M03 was originally titled "...and Voice-over Runtime" and built a voice-over player; that player has been removed and replaced with a text-only narration/dialogue runtime plus a localized Continue action. The bullets below are updated to reflect the current build, not the original one — this milestone was already accepted before the decision, so this is a recorded amendment, not a new milestone.
 
 **Goal:** Build the content layer all later scenes reuse.
 
 **Build**
 
-- Load normalized UI/dialogue/voice rows from Sheets.
+- Load normalized UI/dialogue rows from Sheets (dialogue is text-only; `16_VOICEOVER` is no longer read — see Living Bible §3A-1).
 - Language switcher for five locales.
 - Document and component RTL/LTR rules.
 - Icon registry and asset registry driven by Sheet asset IDs and Google Drive file IDs.
-- Backend Drive media gateway with authorization, MIME validation, `GET`/`HEAD`, byte ranges for audio/video, cache headers, and clear missing/disabled-asset responses.
+- Backend Drive media gateway with authorization, MIME validation, `GET`/`HEAD`, byte ranges for audio/video, cache headers, and clear missing/disabled-asset responses. (Retained for background music/Walkman/ambience/SFX and the separate mailbox voice-note feature — unaffected by the voice-over removal.)
 - Service-worker/browser caching for already-viewed immutable asset versions; cache invalidation when the Sheet asset version changes.
-- Voice-over player with captions, timing, pause/replay, and missing-file fallback.
-- Browser autoplay attempt plus one minimal enable-audio action if blocked.
+- Text-only narration/dialogue presentation (cinematic text for narration, speech bubbles for direct dialogue) with a localized Continue action pacing progression instead of audio duration.
+- Browser autoplay attempt plus one minimal enable-audio action, retained only for the audio that remains (music/Walkman/ambience/SFX).
 - Preload priority and mobile asset selection.
 
 **Acceptance**
 
 - One test screen switches through all five languages without reload.
-- Arabic layout/captions are RTL; EN/IT/EL/FR remain LTR.
+- Arabic layout/text is RTL; EN/IT/EL/FR remain LTR.
 - Back-direction icon mirrors only when its Sheet row says so.
 - Changing an icon/audio Drive file ID or asset version in Sheets changes the rendered asset after refresh.
-- Missing audio still shows the full caption and does not block progress.
+- A disabled/missing dialogue row still shows a safe fallback and does not block progress (see T010/T011).
 - Video/audio seeking works through byte-range responses, and no Drive credential/token appears in browser responses.
 
 ## M04 — Player State, Checkpoints, Keys, and Idempotent Rewards
@@ -631,7 +633,7 @@ Required behavior:
 - Access Sheets only through the backend typed gateway.
 - Preserve five-language and RTL/LTR support even when this milestone uses placeholders.
 - Add automated tests for decision logic and failure/retry behavior.
-- Do not hard-code content, asset URLs, icons, rewards, dates, codes, voice-over text, or event timing that belongs in Sheets.
+- Do not hard-code content, asset URLs, icons, rewards, dates, codes, narration/dialogue text, or event timing that belongs in Sheets.
 - Do not duplicate one-time rewards.
 - Keep the app runnable at the end.
 
@@ -658,8 +660,8 @@ Stop and report any conflict with the Living Bible instead of guessing.
 | T007 | Localization | Switch five locales | Correct localized row selected | five screenshots |
 | T008 | Direction | Arabic | RTL text/captions and deliberate icon mirroring | screenshot |
 | T009 | Direction | EN/IT/EL/FR | LTR remains intact | screenshots |
-| T010 | Voice | Audio available | Correct language audio + synchronized caption | recording |
-| T011 | Voice | Audio missing/blocked | Caption remains and story continues | recording |
+| T010 | Narration | Dialogue row enabled | Correct language text shown in full, with a localized Continue action | recording |
+| T011 | Narration | Text-only progression (superseded 2026-09-17: voice-over removed, see Living Bible §3A-1) | Player-paced Continue advances the story; nothing auto-dismisses before it is read | recording |
 | T012 | Assets | Change icon URL | New icon appears after refresh/cache bypass | before/after |
 | T013 | Story | First clean launch | Non-skippable route follows all 18 beats | full recording |
 | T014 | Story | Close mid-route | Continue/Restart offered; Continue uses last checkpoint | recording + row |
@@ -711,3 +713,8 @@ ChatGPT should review in this order:
 ## 10. First Instruction to Give Claude
 
 Do not send all milestones as one build request. Start with **M00 only** using the Standard Claude Prompt Wrapper. After M00 evidence is reviewed and accepted, send M01.
+
+
+## Release corrections authorized 2026-09-24
+
+Ahmed explicitly authorized the reviewed application release to the existing Render FREE service, including commit/push/deploy; this supersedes the earlier deployment deferral for this release only. Church interior and candle corner are now completely silent: no hymns, Gospel playback, enable prompt, or reading mute controls. The exterior arrival bell remains. No paid service, billing change, Firebase deployment, real-owner reset, or production review clock is authorized. See `docs/reports/RELEASE_FIXES_2026-09-24.md`.

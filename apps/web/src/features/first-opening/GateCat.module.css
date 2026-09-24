@@ -1,0 +1,72 @@
+.anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: auto;
+  transform-origin: 0 0;
+  animation: settle 0.35s ease both;
+}
+.shadow {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(20 8 30 / 62%) 0%,
+    rgb(20 8 30 / 42%) 42%,
+    rgb(20 8 30 / 0%) 100%
+  );
+  filter: blur(1.5px);
+  mix-blend-mode: multiply;
+}
+/* Positions are the sprite's centre in viewport px; the whole leap lasts 1.6s and ends invisible. */
+.jump {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 4px #0006);
+  animation: leap 1.6s cubic-bezier(0.3, 0.1, 0.4, 1) both;
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes leap {
+  0% {
+    opacity: 0;
+    transform: translate(calc(var(--x0) - 50%), calc(var(--y0) - 85%)) scale(1);
+  }
+  12% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+    transform: translate(calc(var(--x1) - 50%), calc(var(--y1) - 50%)) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(calc(var(--x2) - 50%), calc(var(--y2) - 50%)) scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--x3) - 50%), calc(var(--y3) - 50%)) scale(0.45);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sprite,
+  .jump {
+    animation: none;
+  }
+}

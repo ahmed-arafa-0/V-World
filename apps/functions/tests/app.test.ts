@@ -3,6 +3,7 @@ import request from 'supertest';
 import {
   GOOD_WORKBOOK,
   M02_FAKE_ADMIN_PASSWORD,
+  M02_FAKE_GATE_CODE,
   buildM02Workbook,
 } from '@veoullas-world/test-fixtures';
 import { createApp } from '../src/app.js';
@@ -102,8 +103,65 @@ describe('GET /api/admin/schema-health', () => {
     const response = await request(app).get('/api/admin/schema-health').set('Cookie', cookie);
 
     expect(response.status).toBe(200);
-    expect(response.body.summary.expectedTabCount).toBe(42);
+    expect(response.body.summary.expectedTabCount).toBe(44);
     const serialized = JSON.stringify(response.body);
+    expect(serialized).not.toContain(M02_FAKE_ADMIN_PASSWORD);
+    expect(serialized).not.toContain('FAKE_GEMINI_KEY_NOT_REAL');
+  });
+});
+
+describe('GET /api/admin/dashboard, /api/admin/logs, /api/admin/players/:userId', () => {
+  it('reject an unauthenticated request', async () => {
+    const app = appWithFakeGateway();
+    for (const path of ['/api/admin/dashboard', '/api/admin/logs', '/api/admin/players/veoulla']) {
+      const response = await request(app).get(path);
+      expect(response.status).toBe(401);
+      expect(response.body.code).toBe('SESSION_REQUIRED');
+    }
+  });
+
+  it('reject an owner session presented via the Admin cookie', async () => {
+    const client = new FakeGoogleSheetsClient(structuredClone(buildM02Workbook()));
+    const gateway = new SheetGateway(client, { ttlSeconds: 60 });
+    const app = createApp({ getGateway: () => gateway });
+    const gateRes = await request(app)
+      .post('/api/auth/gate')
+      .send({
+        digits: M02_FAKE_GATE_CODE.split(''),
+        deviceId: 'device_app_test',
+        attemptId: 'app_test_owner_login',
+      });
+    const setCookie = gateRes.headers['set-cookie'] as unknown as string[];
+    const ownerCookie = setCookie.find((c) => c.startsWith('vw_owner_session='))!.split(';')[0]!;
+    const sessionId = ownerCookie.split('=')[1]!;
+
+    const response = await request(app)
+      .get('/api/admin/dashboard')
+      .set('Cookie', `vw_admin_session=${sessionId}`);
+    expect([401, 403]).toContain(response.status);
+  });
+
+  it('return dashboard/log/player data for an authenticated Admin, and never leak the Admin password', async () => {
+    const client = new FakeGoogleSheetsClient(structuredClone(buildM02Workbook()));
+    const gateway = new SheetGateway(client, { ttlSeconds: 60 });
+    const app = createApp({ getGateway: () => gateway });
+    const cookie = await adminCookieFor(app);
+
+    const dashboard = await request(app).get('/api/admin/dashboard').set('Cookie', cookie);
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.body.ok).toBe(true);
+    expect(typeof dashboard.body.serverTime).toBe('string');
+
+    const logs = await request(app).get('/api/admin/logs').set('Cookie', cookie);
+    expect(logs.status).toBe(200);
+    expect(Array.isArray(logs.body.rows)).toBe(true);
+
+    const player = await request(app).get('/api/admin/players/veoulla').set('Cookie', cookie);
+    expect(player.status).toBe(200);
+    expect(player.body.userId).toBe('veoulla');
+
+    const serialized =
+      JSON.stringify(dashboard.body) + JSON.stringify(logs.body) + JSON.stringify(player.body);
     expect(serialized).not.toContain(M02_FAKE_ADMIN_PASSWORD);
     expect(serialized).not.toContain('FAKE_GEMINI_KEY_NOT_REAL');
   });

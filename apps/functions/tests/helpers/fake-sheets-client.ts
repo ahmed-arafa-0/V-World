@@ -24,6 +24,7 @@ export class FakeGoogleSheetsClient implements GoogleSheetsClient {
     getValues: 0,
     batchGetValues: 0,
     updateValues: 0,
+    batchUpdateValues: 0,
     appendValues: 0,
   };
 
@@ -75,6 +76,13 @@ export class FakeGoogleSheetsClient implements GoogleSheetsClient {
         table[targetRowIndex]![col + ci] = cellValue;
       });
     });
+  }
+
+  async batchUpdateValues(updates: { range: string; values: string[][] }[]): Promise<void> {
+    this.callCounts.batchUpdateValues++;
+    const before = this.callCounts.updateValues;
+    for (const update of updates) await this.updateValues(update.range, update.values);
+    this.callCounts.updateValues = before;
   }
 
   async appendValues(range: string, values: string[][]): Promise<void> {

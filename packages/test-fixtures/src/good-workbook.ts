@@ -458,6 +458,50 @@ export const GOOD_WORKBOOK: RawWorkbook = {
       enabled: 'TRUE',
       version: '1',
     }),
+    ...(
+      [
+        ['en', 'Happy Birthday, Veoulla!', 'ltr'],
+        ['ar-EG', 'عيد ميلاد سعيد يا فيولا!', 'rtl'],
+        ['it', 'Buon compleanno, Veoulla!', 'ltr'],
+        ['el', 'Χρόνια πολλά, Βεούλα!', 'ltr'],
+        ['fr', 'Joyeux anniversaire, Veoulla !', 'ltr'],
+      ] as const
+    ).map(([locale, text, direction]) =>
+      row('08_UI_TEXT', {
+        ui_text_row_id: `uit_ach_birthday_2026_title_${locale}`,
+        text_id: 'ach_birthday_2026_title',
+        screen_id: 'achievements',
+        component_id: 'title',
+        locale,
+        text,
+        direction,
+        aria_label: text,
+        enabled: 'TRUE',
+        version: '1',
+      }),
+    ),
+    ...(
+      [
+        ['en', 'Celebrated together in the Cottage garden.', 'ltr'],
+        ['ar-EG', 'احتفلتي مع الكل في جنينة الكوتيدج.', 'rtl'],
+        ['it', 'Festeggiato insieme nel giardino del Cottage.', 'ltr'],
+        ['el', 'Γιορτάσαμε μαζί στον κήπο του Cottage.', 'ltr'],
+        ['fr', 'Fêté ensemble dans le jardin du Cottage.', 'ltr'],
+      ] as const
+    ).map(([locale, text, direction]) =>
+      row('08_UI_TEXT', {
+        ui_text_row_id: `uit_ach_birthday_2026_desc_${locale}`,
+        text_id: 'ach_birthday_2026_desc',
+        screen_id: 'achievements',
+        component_id: 'description',
+        locale,
+        text,
+        direction,
+        aria_label: text,
+        enabled: 'TRUE',
+        version: '1',
+      }),
+    ),
   ],
   '09_ICONS': [
     headerFor('09_ICONS'),
@@ -726,12 +770,13 @@ export const GOOD_WORKBOOK: RawWorkbook = {
       event_id: 'birthday_2026',
       event_name: 'Fixture Birthday',
       event_type: 'birthday',
-      target_at: '2026-09-26T00:00:00.000Z',
+      // 2026-09-26 00:00 / 2026-09-28 00:00 Africa/Cairo (UTC+3, daylight saving time) — the approved M16 window.
+      target_at: '2026-09-25T21:00:00.000Z',
       time_zone: 'Africa/Cairo',
-      start_at: '2026-09-25T00:00:00.000Z',
-      end_at: '2026-09-29T00:00:00.000Z',
+      start_at: '2026-09-25T21:00:00.000Z',
+      end_at: '2026-09-27T21:00:00.000Z',
       enabled: 'TRUE',
-      story_route_id: 'first_journey',
+      story_route_id: '',
       force_flag_id: 'force_birthday_story',
       replay_allowed: 'TRUE',
       notes: 'fixture',
@@ -769,6 +814,67 @@ export const GOOD_WORKBOOK: RawWorkbook = {
       enabled: 'TRUE',
       notes: 'fixture',
     }),
+    // Ahmed's birthday letter (draft). `ar-EG` is his own authored text; the other four locales are
+    // draft translations pending his review — see docs/reports for the M16 evidence report. Delivery
+    // itself is governed by `world/birthday.ts`'s `claimGifts` (never `deliverDueMessages`), so
+    // `delivery_at` here is documentation only, not a gate.
+    ...(
+      [
+        [
+          'en',
+          'msg_birthday_2026_en',
+          'ltr',
+          'Veoulla 🤍\nHappy birthday, dear Professor Doctor Engineer, the lovely Miss Veoulla!\nI hope your new year brings rest for your heart, laughter without counting,\nand steps that bring you closer to the things you wish for.\nI’m happy for our friendship, and I wanted you to have a celebration here\nyou can come back to whenever you like. Take your time, make a wish, and celebrate your way.\nEvery year, you have a dear place with me 💜\n— Ahmed',
+        ],
+        [
+          'ar-EG',
+          'msg_birthday_2026_ar',
+          'rtl',
+          'يا فيولا 🤍\nكل سنة وإنتِ طيبة يا بروفسيرة دكتورة بشمهندسة الآنسة الجميلة فيولا!\nأتمنى سنتك الجديدة يكون فيها راحة لقلبك، وضحك من غير حساب،\nوخطوات تقرّبك من الحاجات اللي نفسك فيها.\nأنا مبسوط بصداقتنا، وحبيت يكون ليكي هنا احتفال تقدري ترجعي له\nكل ما تحبي. خدي وقتك، اتمني أمنية، واحتفلي بطريقتك.\nكل سنة وإنتِ ليكي مكان غالي عندي 💜\n— أحمد',
+        ],
+        [
+          'it',
+          'msg_birthday_2026_it',
+          'ltr',
+          'Veoulla 🤍\nBuon compleanno, cara Professoressa Dottoressa Ingegnera, la bella signorina Veoulla!\nSpero che il tuo nuovo anno porti riposo al tuo cuore, risate senza contarle,\ne passi che ti avvicinino alle cose che desideri.\nSono felice della nostra amicizia, e ho voluto che tu avessi qui una festa a cui tornare\nogni volta che vuoi. Prenditi il tuo tempo, esprimi un desiderio, e festeggia a modo tuo.\nOgni anno, hai un posto caro nel mio cuore 💜\n— Ahmed',
+        ],
+        [
+          'el',
+          'msg_birthday_2026_el',
+          'ltr',
+          'Βεούλα 🤍\nΧρόνια πολλά, αγαπητή Καθηγήτρια Δόκτωρ Μηχανικέ, όμορφη δεσποινίς Βεούλα!\nΕύχομαι ο νέος σου χρόνος να φέρει ανάπαυση στην καρδιά σου, γέλιο χωρίς μέτρημα,\nκαι βήματα που θα σε φέρουν πιο κοντά σε ό,τι επιθυμείς.\nΧαίρομαι για τη φιλία μας, και ήθελα να έχεις εδώ μια γιορτή που μπορείς να επισκέπτεσαι\nόποτε θέλεις. Πάρε τον χρόνο σου, κάνε μια ευχή, και γιόρτασε με τον δικό σου τρόπο.\nΚάθε χρόνο, έχεις μια αγαπημένη θέση δίπλα μου 💜\n— Ahmed',
+        ],
+        [
+          'fr',
+          'msg_birthday_2026_fr',
+          'ltr',
+          'Veoulla 🤍\nJoyeux anniversaire, chère Professeure Docteure Ingénieure, la charmante Mademoiselle Veoulla !\nJ’espère que ta nouvelle année apportera du repos à ton cœur, des rires sans compter,\net des pas qui te rapprochent de ce que tu souhaites.\nJe suis heureux de notre amitié, et j’ai voulu que tu aies ici une célébration à laquelle revenir\nquand tu veux. Prends ton temps, fais un vœu, et célèbre à ta façon.\nChaque année, tu as une place précieuse auprès de moi 💜\n— Ahmed',
+        ],
+      ] as const
+    ).map(([locale, rowId, direction, text]) =>
+      row('19_MESSAGES', {
+        message_row_id: rowId,
+        message_id: 'msg_birthday_2026',
+        sender_id: 'ahmed',
+        recipient_user_id: 'veoulla',
+        delivery_at: '2026-09-25T21:00:00.000Z',
+        priority: 'high',
+        message_type: 'letter',
+        locale,
+        text,
+        direction,
+        image_asset_ids: '',
+        gift_ids: 'birthday_2026_celebrated,birthday_cottage_decoration',
+        translation_group_id: 'grp_msg_birthday_2026',
+        archive_after_open: 'FALSE',
+        // Enabled in this TEST fixture so the flow is fully testable. The real Sheet row this
+        // seeds from (scripts/seed-birthday-event.mjs, not yet run) stays `enabled: FALSE` — a
+        // deliberate draft — until Ahmed approves the wording.
+        enabled: 'TRUE',
+        notes:
+          'fixture — draft letter, EN/IT/EL/FR are unapproved translations of Ahmed’s ar-EG text',
+      }),
+    ),
   ],
   '20_SONGS': [
     headerFor('20_SONGS'),
@@ -840,6 +946,22 @@ export const GOOD_WORKBOOK: RawWorkbook = {
       trigger_type: 'key_award',
       trigger_rule_json: '{}',
       reward_key_type_id: 'key_shell',
+      reward_quantity: '0',
+      enabled: 'TRUE',
+    }),
+    row('23_ACHIEVEMENTS', {
+      achievement_id: 'birthday_2026_celebrated',
+      category: 'birthday',
+      title_text_id: 'ach_birthday_2026_title',
+      description_text_id: 'ach_birthday_2026_desc',
+      icon_id: '',
+      secret: 'TRUE',
+      points: '10',
+      trigger_type: 'birthday_gift_claim',
+      trigger_rule_json: '{}',
+      // No progression key: birthday_2026's gifts are the letter, the Cottage decoration and this
+      // achievement only. Leaving these two blank is what makes `unlockAchievement` skip a key award.
+      reward_key_type_id: '',
       reward_quantity: '0',
       enabled: 'TRUE',
     }),
@@ -1118,6 +1240,39 @@ export const GOOD_WORKBOOK: RawWorkbook = {
       active: 'TRUE',
       admin_approved: 'TRUE',
       notes: 'fixture',
+    }),
+  ],
+  '42_ARCADE_TRIVIA': [
+    headerFor('42_ARCADE_TRIVIA'),
+    row('42_ARCADE_TRIVIA', {
+      question_row_id: 'triv_1_en',
+      question_id: 'triv_1',
+      locale: 'en',
+      question: 'Which shape is the Farm key?',
+      question_type: 'multiple_choice',
+      option_a: 'Sunflower',
+      option_b: 'Candle',
+      option_c: 'Shell',
+      option_d: 'Envelope',
+      correct_answer: 'a',
+      explanation: 'The Farm key is sunflower-shaped.',
+      enabled: 'TRUE',
+      review_status: 'pending_review',
+    }),
+  ],
+  '43_COMPANION_HINTS': [
+    headerFor('43_COMPANION_HINTS'),
+    row('43_COMPANION_HINTS', {
+      hint_row_id: 'hint_farm_plant_en',
+      hint_id: 'hint_farm_plant',
+      location_id: 'farm',
+      condition_type: 'story_beat_pending',
+      condition_value: 'beat_14_farm',
+      priority: '1',
+      locale: 'en',
+      text: 'Try planting a seed here.',
+      direction: 'ltr',
+      enabled: 'TRUE',
     }),
   ],
 };

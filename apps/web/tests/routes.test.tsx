@@ -6,6 +6,9 @@ import { installMockFetch } from './helpers/mockApi';
 
 function renderAt(path: string) {
   installMockFetch();
+  // This suite tests routing, not the one-time pre-Gate opening sequence
+  // (covered by PreGateSequence.test.tsx) — skip straight to the dial form.
+  window.sessionStorage.setItem('vw_gate_opening_seen', 'true');
   return render(
     <MemoryRouter
       initialEntries={[path]}
@@ -19,7 +22,7 @@ function renderAt(path: string) {
 describe('AppRoutes', () => {
   it('renders the Gate at /', async () => {
     renderAt('/');
-    expect(await screen.findByRole('heading', { name: "Veoulla's World" })).toBeInTheDocument();
+    expect(await screen.findByTestId('gate-root')).toBeInTheDocument();
     expect(await screen.findByRole('group', { name: /four-digit gate code/i })).toBeInTheDocument();
   });
 

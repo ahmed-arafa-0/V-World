@@ -45,7 +45,7 @@ Maintain support for English, Egyptian Arabic, Italian, Greek, and French. Arabi
 
 ## 10. No hard-coded editable content
 
-Never hard-code: text, assets, Drive file IDs, icons, dates, codes, event phases, rewards, voice-over, dialogue, or story rules. These belong in Google Sheets and flow through the backend.
+Never hard-code: text, assets, Drive file IDs, icons, dates, codes, event phases, rewards, dialogue, or story rules. These belong in Google Sheets and flow through the backend.
 
 ## 11. No collectible stars
 
@@ -77,6 +77,28 @@ Never delete or overwrite unrelated user files or in-progress work. Investigate 
 
 Save it to `docs/reports/M<NN>_EVIDENCE.md`, containing: changed files, commands run, test results, screenshots, acceptance results, known limitations, and explicit confirmation that later milestones were not implemented.
 
+## 17. No voice-over, anywhere (Ahmed's decision, 2026-09-17)
+
+Voice-over is removed from the entire experience, across all three build phases. This supersedes every prior requirement for recorded narration, five-language voice-over, or Ahmed supplying recordings. Rules that follow from this:
+
+- All dialogue/narrative text is still required in all five languages. VAR remains the sole first-journey narrator. Narration renders as cinematic text; direct dialogue renders as speech bubbles.
+- Never add voice-over playback, voice-specific controls, audio requests, preload dependencies, or "voice unavailable/not configured" notices to the player experience.
+- Story progression is player-paced text, not audio duration: a localized Continue action appears once text is fully shown; essential dialogue is never auto-dismissed before the player can read it.
+- Background music, the Walkman, ambience, and sound effects are unaffected — including the Church/Café/Arcade audio rules — and keep the existing browser audio-enabling gesture for that remaining audio.
+- Marcelino's mailbox voice-note feature (Ahmed's personal messages to Veoulla) is a distinct feature, unaffected by this rule.
+- `16_VOICEOVER` and its historical rows, and `15_DIALOGUE.voiceover_id`'s historical values, stay in the Sheet untouched — no destructive schema migration. The backend simply no longer reads or exposes them.
+- See `docs/Veoullas_World_Living_Bible.md` §3A-1 for the full decision record, and `docs/reports/PHASE1_VOICEOVER_REMOVAL_CHECKPOINT.md` for the implementation evidence.
+
+## 18. M16 Birthday Event Engine opened, narrow M17 test-clock slice only (Ahmed's decision, 2026-09-24)
+
+Ahmed has explicitly opened **M16 — Birthday Event Engine** as a currently-requested milestone, ahead of its position in the M04–M15 sequence, because the Living Bible §18K birthday timeline design was already **Locked — approved by Ahmed** and only its content inputs were marked "Open." Ahmed has now supplied those content inputs directly. This is a targeted exception to rule 3, not a general license to skip milestone order:
+
+- In scope: `birthday_2026`'s date/time configuration fields and the Sheets-serial date-parsing fix in the existing normalization path; the approved birthday letter and its four translations; the `birthday_2026_celebrated` achievement; the decoration catalog/configuration record it uses; birthday-specific UI-text rows; the onboarding invitation-queue/late-arrival behavior described in Ahmed's request; and reset tooling for a dedicated review identity.
+- Also in scope, narrowly: the specific slice of **M17** needed to test M16 — a **server-side, event-scoped, admin-only, non-production-route** injected test clock and forced-phase/replay controls for the birthday event only. This is not the general M17 Admin Panel milestone (feature-flag UI, active-codes controls, in-app Sheet editing) and does not open it.
+- Still deferred: M15 (VAR/Gemini — birthday dialogue remains authored Sheets content, not AI-generated, per rule 8), the rest of M17 (production admin panel), and M18 (deployment). M04–M14 remain governed by whatever has actually been accepted for them regardless of this note.
+- No real-owner reward mutation, no live global clock change, and no early/forced go-live of the event are authorized by this note — see Ahmed's request for the exact constraints.
+- See `docs/reports/RELEASE_CHECKLIST.md` (updated same date) and the evidence report for this work once produced.
+
 ---
 
 ## Quick reference: repository shape
@@ -93,4 +115,8 @@ Save it to `docs/reports/M<NN>_EVIDENCE.md`, containing: changed files, commands
 
 ## Quick reference: current milestone
 
-**M01 — Google Sheets Gateway and Schema Health** is the latest accepted milestone. See `docs/reports/M01_EVIDENCE.md` (and `docs/reports/M00_EVIDENCE.md` for the foundation). Do not build the Gate, island, Map, buildings, characters, birthday event, VAR/Gemini, Marcelino, sessions/IP logging, player progress writes, or real Admin authentication until their milestone is explicitly requested and M01 has been accepted. The Admin Schema Health route is intentionally unauthenticated and read-only pending M02.
+The formal M-numbered commit sequence (`M00`…`M03-B1`) is the last strictly-ordered milestone history in git log; substantial further work (Gate, island, buildings, characters, first journey, Church/Café/VARcade/Cottage/Farm/Everkeep, dialogue/images/audio) has since been built and evidenced under the `docs/reports/PHASE1`–`PHASE3` and related reports, tracked in `docs/reports/RELEASE_CHECKLIST.md` rather than by strict M-number. As of 2026-09-24, per rule 18, **M16 — Birthday Event Engine** and a narrow admin-only test-clock slice of M17 are explicitly opened and in progress; M15 (Gemini/VAR AI), the rest of M17 (production admin panel), and M18 (deployment) remain deferred. Consult `docs/reports/RELEASE_CHECKLIST.md` for the current authoritative status of each area before assuming a milestone is or isn't built.
+
+## Release corrections authorized 2026-09-24
+
+Ahmed explicitly authorized the reviewed application release to the existing Render FREE service, including commit/push/deploy; this supersedes the earlier deployment deferral for this release only. Church interior and candle corner are now completely silent: no hymns, Gospel playback, enable prompt, or reading mute controls. The exterior arrival bell remains. No paid service, billing change, Firebase deployment, real-owner reset, or production review clock is authorized. See `docs/reports/RELEASE_FIXES_2026-09-24.md`.

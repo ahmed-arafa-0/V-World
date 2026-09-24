@@ -21,6 +21,10 @@ export interface BootstrapLocation {
   displayNameTextId: string;
   subtitleTextId: string;
   mapOrder: number;
+  firstVisitOrder: number;
+  entrySceneId: string;
+  keyTypeId: string;
+  ambientAssetId: string;
 }
 
 export interface BootstrapStoryBeat {

@@ -6,6 +6,9 @@ node_modules/
 dist/
 build/
 lib/
+!scripts/lib/
+scripts/lib/*
+!scripts/lib/phase2-fixture.mjs
 *.tsbuildinfo
 
 # Environment / secrets (never commit)
@@ -15,6 +18,9 @@ lib/
 apps/functions/config-private/google-service-account.json
 apps/functions/config-private/*.json
 !apps/functions/config-private/README.md
+
+# Local raw Phase 1 art handoff (large source PNGs/zip; never committed — see assets/phase1/README.md)
+/assets/
 
 # Firebase
 .firebase/
@@ -29,6 +35,7 @@ coverage/
 playwright-report/
 test-results/
 blob-report/
+e2e-logs/
 
 # Editor / OS
 .vscode/*
@@ -41,3 +48,42 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Claude Code tooling (installed skills, local session lock) — not app source
+.claude/
+.agents/
+skills-lock.json
+
+# Scratch/local-only outputs — not app source, never needed to build or deploy
+tmp-shots/
+/public/
+scripts/.birthday-preview/
+
+# Raw live-Sheet inspection dumps ONLY — not the whole directory: two of the
+# three files here are genuine throwaway caches (large, write-only, never
+# read back by any script — `inspect-real-content-gaps.mjs` writes
+# real-content-gaps-raw.json, nothing reads live-check-museum-arcade.json),
+# but welcome-message-2026-09-22.json is authored seed input that
+# seed-welcome-message.mjs, verify-welcome-browser.mjs, and
+# verify-welcome-live-readonly.mjs all read via fs.readFileSync — excluding
+# it would ship those three scripts broken. Sheets/Drive remain the sole
+# source of truth per CLAUDE.md §4 either way; this JSON is the authored
+# source for one Sheet row, not a duplicated parallel store.
+scripts/content/*
+!scripts/content/welcome-message-2026-09-22.json
+
+# Live-verification browser evidence (screenshots/results from real-Sheet runs)
+# — working artifacts, not formal milestone evidence; excluded from the
+# release for size and privacy, unlike the small per-milestone screenshots
+# under docs/reports/M00–M03 and docs/reports/PHASE1/, which stay tracked.
+docs/reports/*_LIVE/
+docs/reports/MANUAL_JOURNEY/
+docs/reports/PHASE1_PRESENTATION/
+docs/reports/PHASE1_REAL_ART/
+docs/reports/PHASE2/
+docs/reports/JOURNEY_POLISH/
+docs/reports/SCENE_POLISH/
+
+# Ahmed's personal working notes referencing his own local screen recordings
+# (not stored in the repo) — excluded from the release at his request.
+/Veoulla_Manual_Journey_Fixes.md

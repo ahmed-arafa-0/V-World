@@ -6,7 +6,7 @@ import type {
   SessionLogoutResult,
   SessionResumeResult,
 } from '@veoullas-world/contracts';
-import { httpStatusForCode } from '../errors/app-error.js';
+import { httpStatusForCode, toSafeApiError } from '../errors/app-error.js';
 import { clearSessionCookie, readSessionCookie, type CookieEnv } from '../http/cookies.js';
 import type { SheetGateway } from '../repositories/sheet-gateway.js';
 import { appendEntryLogIfAbsent } from '../services/entry-log.service.js';
@@ -30,6 +30,19 @@ function backendNotConfigured(res: Response): void {
   res.status(503).json(error);
 }
 
+/** Express 4 does not consume rejected async handlers. A storage failure must answer the request,
+ * preserve the cookie for recovery, and never terminate the preview process. */
+function sessionHandler(fn: (req: Request, res: Response) => Promise<void>) {
+  return async (req: Request, res: Response): Promise<void> => {
+    try {
+      await fn(req, res);
+    } catch (error) {
+      const safe = toSafeApiError(error);
+      res.status(safe.httpStatus).json({ ok: false, code: safe.code, message: safe.message });
+    }
+  };
+}
+
 /**
  * GET /api/session/owner | /api/session/admin — resume. Reads the
  * corresponding HttpOnly cookie, validates the live (uncached) Sheet
@@ -43,7 +56,7 @@ export function createSessionResumeHandler(
   now: () => Date,
   cookieEnv: () => CookieEnv,
 ) {
-  return async (req: Request, res: Response): Promise<void> => {
+  return sessionHandler(async (req: Request, res: Response): Promise<void> => {
     const gateway = getGateway();
     if (!gateway) {
       backendNotConfigured(res);
@@ -89,7 +102,7 @@ export function createSessionResumeHandler(
     );
     const result: SessionResumeResult = { ok: true, session: summary };
     res.status(200).json(result);
-  };
+  });
 }
 
 /**
@@ -105,7 +118,7 @@ export function createSessionHeartbeatHandler(
   now: () => Date,
   cookieEnv: () => CookieEnv,
 ) {
-  return async (req: Request, res: Response): Promise<void> => {
+  return sessionHandler(async (req: Request, res: Response): Promise<void> => {
     const gateway = getGateway();
     if (!gateway) {
       backendNotConfigured(res);
@@ -135,7 +148,7 @@ export function createSessionHeartbeatHandler(
     );
     const result: SessionHeartbeatResult = { ok: true, session: summary };
     res.status(200).json(result);
-  };
+  });
 }
 
 /**
@@ -151,7 +164,7 @@ export function createSessionLogoutHandler(
   now: () => Date,
   cookieEnv: () => CookieEnv,
 ) {
-  return async (req: Request, res: Response): Promise<void> => {
+  return sessionHandler(async (req: Request, res: Response): Promise<void> => {
     const gateway = getGateway();
     if (!gateway) {
       backendNotConfigured(res);
@@ -190,5 +203,5 @@ export function createSessionLogoutHandler(
 
     clearSessionCookie(res, kind, cookieEnv());
     res.status(200).json(result);
-  };
+  });
 }

@@ -8,11 +8,11 @@ import {
 } from '../src/index.js';
 
 describe('tab registry', () => {
-  it('contains exactly 42 unique tab definitions', () => {
-    expect(EXPECTED_TAB_COUNT).toBe(42);
-    expect(TAB_NAMES.length).toBe(42);
-    expect(new Set(TAB_NAMES).size).toBe(42);
-    expect(Object.keys(TAB_REGISTRY).length).toBe(42);
+  it('contains exactly 44 unique tab definitions', () => {
+    expect(EXPECTED_TAB_COUNT).toBe(44);
+    expect(TAB_NAMES.length).toBe(44);
+    expect(new Set(TAB_NAMES).size).toBe(44);
+    expect(Object.keys(TAB_REGISTRY).length).toBe(44);
   });
 
   it('has a registry entry for every declared tab name', () => {
@@ -22,7 +22,7 @@ describe('tab registry', () => {
     }
   });
 
-  it('matches the exact 42 tab names from the accepted workbook (order-independent)', () => {
+  it('matches the exact 44 tab names from the accepted workbook (order-independent)', () => {
     const expected = [
       '00_README',
       '01_APP_CONFIG',
@@ -66,6 +66,8 @@ describe('tab registry', () => {
       '39_VALIDATION_LISTS',
       '40_VAR_CONVERSATIONS',
       '41_VAR_MEMORIES',
+      '42_ARCADE_TRIVIA',
+      '43_COMPANION_HINTS',
     ].sort();
     expect([...TAB_NAMES].sort()).toEqual(expected);
   });

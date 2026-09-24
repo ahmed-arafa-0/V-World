@@ -1,9 +1,11 @@
 # Veoulla's World — Living World Bible
 
 **Status:** Active discovery document  
-**Version:** 0.28  
-**Updated:** 2026-09-04  
+**Version:** 0.29  
+**Updated:** 2026-09-17  
 **Authority:** Ahmed's explicit decisions in the current redesign conversation
+
+**2026-09-17 — Voice-over removed from the entire experience, across all three phases (supersedes every voice-over/recorded-narration decision below).** See §3A-1. All dialogue and narrative text is preserved in all five languages; VAR remains the sole first-journey narrator; narration is now presented as cinematic text and direct dialogue as speech bubbles, with a localized Continue action pacing progression instead of audio duration. Background music, Walkman, ambience, and sound effects are unaffected. Every other mention of "voice-over"/"voiceover" in this document below §3A-1 describes the superseded design and is retained only as history, per this document's own supersession convention (see §3A's now-superseded line about the earlier text-only decision).
 
 ## 1. Document Rules
 
@@ -29,7 +31,7 @@
 
 - `Claude_Code_Master_Build_Plan.md` defines the implementation architecture, repository structure, backend/Sheet gateway, global Definition of Done, and review process.
 - Implementation is divided into milestones **M00–M18**, beginning with the project skeleton and Sheet gateway before any detailed world-building work.
-- The plan includes a reusable Claude prompt wrapper and **45 acceptance tests** covering access, IP logging, localization, RTL/LTR, voice-over, story checkpoints, keys, navigation, every building system, VAR/Marcelino, birthday phases, replay protection, resilience, and full regression.
+- The plan includes a reusable Claude prompt wrapper and **45 acceptance tests** covering access, IP logging, localization, RTL/LTR, text-only narration progression (originally specified as voice-over — see §3A-1), story checkpoints, keys, navigation, every building system, VAR/Marcelino, birthday phases, replay protection, resilience, and full regression.
 - Claude must receive one milestone at a time. M01 cannot begin until M00 evidence is reviewed and accepted, and the same gate applies throughout the sequence.
 
 ## 3. Technical Foundation
@@ -105,9 +107,21 @@
 - Secure backend choice, Sheet caching strategy, API quotas, write queue, conflict handling, and outage fallback.
 - Veoulla-code hashing/rotation, Admin authentication method, session lifetime, logout, and rate limiting.
 - Exact access-log columns, IP retention, privacy notice, device/session identifiers, Admin log viewer, and log cleanup policy.
-- Exact voice-over production/source, audio formats, preloading, caption timing, and missing-translation fallback.
 - Icon format rules, asset versioning, Drive folder layout, media-gateway caching, and fallback behavior when a Sheet reference is invalid.
 - Later-production security migration: hashing, encryption/managed secrets, rotation, and secure Admin recovery.
+
+## 3A-1. Voice-Over Removal (Ahmed's decision, 2026-09-17)
+
+**Locked — supersedes every voice-over/recorded-narration decision elsewhere in this document**
+
+- Voice-over is removed from the entire Veoulla's World experience, across all three build phases. This supersedes all previous requirements for recorded narration, five-language voice-over, and Ahmed supplying recordings (including §3A's "The initial Gate narration is voice-over-enabled in all five languages" line, which is itself now superseded in the opposite direction).
+- All dialogue and narrative text remains in English, Egyptian Arabic, Italian, Greek, and French. VAR remains the sole narrator of the first-visit story.
+- Narration (VAR's storytelling voice) is presented as cinematic text. Direct dialogue is presented in speech bubbles. `displayMode` on the `15_DIALOGUE` row decides which.
+- Audio-paced story progression is replaced by text progression: a localized "Continue" action appears once the text is fully shown, and the player advances the story themselves. Essential dialogue is never auto-dismissed before the player can read it. Checkpoint/resume behavior and the mandatory first journey are unaffected.
+- Background music, the Walkman, ambience, and sound effects are unaffected and continue exactly as designed — including the Church/Café/Arcade audio rules. Browser audio-enabling behavior (the "one minimal user gesture" pattern) is preserved only for this remaining audio, not for narration.
+- Marcelino's mailbox voice-note support (Ahmed's personal recorded messages to Veoulla) is a distinct feature and is unaffected by this decision — this removes narrated story dialogue, not personal message attachments.
+- `16_VOICEOVER` and every historical row in it remain in the Sheet, untouched, with no destructive migration. The runtime simply no longer reads that tab. `15_DIALOGUE.voiceover_id` also remains as a column with historical values; it is no longer resolved by the runtime.
+- Every mention of "voice-over"/"voiceover" elsewhere in this document (§3A, §8A, the §18J beat table, the birthday section, and others) describes the now-superseded audio design and is retained as history rather than rewritten, per this document's own §1 rule that decisions are layered, not silently overwritten.
 
 ## 3B. Google Sheets Blueprint Deliverable
 
@@ -117,7 +131,7 @@
 - The workbook contains 42 organized tabs covering:
   - app configuration, users, temporary plaintext secrets, Admin flags, entry/IP logs, and sessions;
   - supported languages, localized UI text, icons, assets, locations, and scenes;
-  - routes, 18 first-journey beats, dialogue, five-language voice-over, events, and birthday phases;
+  - routes, 18 first-journey beats, dialogue, five-language text (originally voice-over — see §3A-1; `16_VOICEOVER`'s historical rows remain but are unread), events, and birthday phases;
   - messages, songs, key catalog/rules, achievements, and all per-user progress/state tables;
   - Farm, Church, VARcade, Everkeep, VAR, and Marcelino configuration/state;
   - the append-only VAR conversation archive and durable cross-session VAR memories (`40_VAR_CONVERSATIONS`, `41_VAR_MEMORIES`);
@@ -245,7 +259,7 @@
 - Night combines violet moonlight, warm windows/lamps, and a pronounced but controlled star-filled sky.
 - Weather appears as visual and audio layers such as cloud, rain, fog, wind, and surface reactions; clarity and usability must remain protected.
 - Persistent UI mixes world-like physical objects with restrained translucent violet-glass interface treatment.
-- Voiceovers use cinematic bottom captions.
+- Narration is presented as cinematic bottom-of-screen text (originally the caption for a voice-over; per §3A-1, this is now the text itself — there is no voice-over).
 - VAR's direct dialogue is presented through speech bubbles in the initial release.
 - Marcelino initially communicates through movement and sounds rather than written dialogue.
 - The current island-map asset is retained as the structural/visual map asset unless Ahmed later approves a revision.
@@ -382,7 +396,7 @@ These are references, not final approved assets:
 - Wide-screen island/ocean implementation screenshot.
 - Dark violet carved gate with four input dials.
 - Three-pose warm illustrated Veoulla avatar.
-- Gate-closed storyboard: code dials and bottom voiceover caption.
+- Gate-closed storyboard: code dials and bottom cinematic text (originally a voiceover caption; per §3A-1 it is now the text itself).
 - Gate-opening storyboard: split doors reveal the island through the opening.
 - Cottage/Arcade regional storyboard: first-person regional scene, mailbox, interaction diamonds, persistent Map/Language/Walkman controls, and a horizontally connected camera space.
 - Arcade storyboard: physical cabinets, a locked cabinet, scoreboard, VAR/cat presence, Back, Map, Language, and Walkman. The stars shown in the old drawing are not part of the approved new-world design.
@@ -411,7 +425,7 @@ Each item must be discussed again before moving out of this section.
 ## 18. Deferred Experience Design
 
 - First link opening and first-run experience.
-- Gate dialogue, code, voiceover, and exact entrance choreography.
+- Gate dialogue, code, and exact entrance choreography (voice-over no longer applies — see §3A-1).
 - Daily pre-birthday loop.
 - Final hours before the birthday.
 - Midnight birthday transformation.
@@ -501,6 +515,33 @@ Each item must be discussed again before moving out of this section.
 - Exact Bible-story gallery presentation, schedule, and interaction style.
 - Exact photo, story, hymns, verses, messages, and Google Sheets schemas.
 - Whether bell/bird ambience follows real time, scheduled moments, or a fixed loop.
+
+## 18B-1. Church Audio — Hymn Replaced by Gospel Reading (Ahmed's decision, 2026-09-22)
+
+**Locked — supersedes §18B's hymn bullets for the player experience; §18B's other bullets (candle
+corner, verse/story/quiz, Walkman-stops-on-entry, no voice-over) are unaffected**
+
+- The manually-played hymn feature described in §18B ("manually play a hymn... no background hymn
+  auto-plays... a hymn plays only after deliberate user interaction") is replaced in the player
+  experience by a supplied Gospel reading. This is a distinct decision from §3A-1: the reading is
+  ordinary remaining Church audio, not narration, and is not affected by the voice-over removal.
+- The reading autoplays (browser policy permitting, with the same one-tap "enable audio" fallback
+  used elsewhere) at 5% volume, and only while the player is inside the Church interior or the
+  candle-corner close-up — the two visual states the Church view ever renders. Moving between those
+  two views never restarts it, since both are sub-states of one mounted view, not separate page
+  loads.
+- Leaving the Church (returning to the Beach) fades the reading out and stops it, mirroring the
+  existing hymn-fade behavior it replaces.
+- The Walkman and the cat remain absent inside the Church exactly as before (§18B, §12): the Walkman
+  pauses on entering and stays paused after leaving until the player explicitly presses play again —
+  this was already the existing "silence" behavior and needed no change.
+- A short bell plays once on arrival at the Church exterior (the approach view before the door),
+  deduplicated per arrival so revisiting the same spot does not re-ring it.
+- `20_SONGS` rows with `location_id: 'church'` (the hymn catalog) are unaffected and remain in the
+  Sheet — nothing is deleted; the player experience simply no longer surfaces a hymn-picker panel.
+  A future decision could reintroduce a distinct hymn feature without conflicting with this one.
+- No voice-over/narration is reintroduced by this decision (§3A-1 is unaffected and still governs
+  narration).
 
 ## 18C. Vinyl Café
 
@@ -699,8 +740,8 @@ Each item must be discussed again before moving out of this section.
 - VAR is present from the beginning at the Gate and already knows Veoulla before she arrives.
 - VAR's central narrative function is to be a character with a personal story and secrets of its own, rather than merely a generic helper.
 - VAR is the sole narrator of the first-visit story.
-- VAR's direct dialogue appears in speech bubbles and may be paired with localized voice-over where the content row enables it.
-- First-visit narration is attributed to VAR and includes localized voice-over plus synchronized cinematic captions in all five languages.
+- VAR's direct dialogue appears in speech bubbles (per §3A-1, text-only — no voice-over).
+- First-visit narration is attributed to VAR and presented as cinematic text in all five languages, with a localized Continue action pacing progression (per §3A-1).
 - Conversation uses a hybrid model:
   - authored, deterministic dialogue for story-critical scenes;
   - optional AI conversation outside those critical beats.
@@ -817,7 +858,7 @@ Each item must be discussed again before moving out of this section.
 - The Map is unavailable at the beginning. VAR introduces and unlocks it only at the conclusion of the journey.
 - The Walkman is received and activated at Vinyl Café.
 - Marcelino first appears from the Cottage garden carrying his mailbag.
-- Marcelino delivers the first message and then runs away. The first message is explicitly from Ahmed, while its localized content, active date, voice-over references, and presentation rules come from Google Sheets.
+- Marcelino delivers the first message and then runs away. The first message is explicitly from Ahmed, while its localized content, active date, optional personal voice-note reference (an intentional, distinct feature per §3A-1 — not narrated dialogue), and presentation rules come from Google Sheets.
 - The journey enters The Everkeep and ends inside its Central Hall.
 - At the ending, VAR states that Veoulla is now free to explore and gives/unlocks the Map as an in-world object. The Map then appears as an available persistent control.
 - The successful Map unlock is the authoritative story-completion moment.
@@ -843,31 +884,31 @@ Each item must be discussed again before moving out of this section.
 
 | Beat | Visual and interaction | Audio / localized presentation | State and Sheet responsibility |
 | --- | --- | --- | --- |
-| 01. Bootstrap | Black screen while essential configuration and first scene assets load. A short line fades in, followed by the world title. | Sea ambience attempts autoplay; voice-over and caption use the active English row initially. Show one unobtrusive sound-enabling gesture only if blocked. | Create an entry-log event, resolve active Gate/story versions, access rules, language rows, icon references, and asset URLs. |
+| 01. Bootstrap | Black screen while essential configuration and first scene assets load. A short line fades in, followed by the world title. | Sea ambience attempts autoplay (unaffected by §3A-1); the fading-in line uses the active English row initially, as text — no voice-over. Show one unobtrusive sound-enabling gesture only if ambience playback is blocked. | Create an entry-log event, resolve active Gate/story versions, access rules, language rows, icon references, and asset URLs. |
 | 02. Closed Gate | Title recedes to reveal the closed carved Gate and four number dials. Admin access remains a separate restrained control/route. | Wind/sea distance, low Gate ambience, localized instructions. | Start or resume a secure Veoulla entry session; never send the valid code to the browser. |
-| 03. Unseen VAR | A speech/caption appears before the cat is shown. The source initially has no personal name label because VAR refuses to state one. | Warm localized VAR voice-over plus synchronized caption; Arabic switches caption direction to RTL. | Dialogue ID, translations, audio URLs, timings, speaker behavior, and next beat come from Sheets. |
+| 03. Unseen VAR | A speech/caption appears before the cat is shown. The source initially has no personal name label because VAR refuses to state one. | Warm localized VAR line, shown as text with a Continue action (per §3A-1, no voice-over); Arabic switches text direction to RTL. | Dialogue ID, translations, speaker behavior, and next beat come from Sheets. |
 | 04. VAR reveal | VAR steps into view and greets Veoulla warmly. The Gate dials become interactive. | Character reveal cue and localized welcome. | Save `var_encountered`; do not yet save a personal cat name or gender. |
 | 05. Gate attempt | Veoulla rotates four physical dials and submits. Wrong entries create only a small shake and error sound. | Mechanical clicks and a restrained failure cue. | Backend validates against the current active Sheet-configured code and logs success/failure, timestamp, session, and server-observed IP. Rate limiting remains a technical design item. |
-| 06. Gate opening | Correct validation creates a light seam; both doors open slowly, the island becomes visible, and music rises. VAR jumps through and waits beyond the threshold. | Full multilingual success narration/caption and cinematic musical rise. | Mark Gate passed and checkpoint before transition so refresh never requires another successful code entry within the valid session. |
+| 06. Gate opening | Correct validation creates a light seam; both doors open slowly, the island becomes visible, and music rises. VAR jumps through and waits beyond the threshold. | Full multilingual success narration as text (per §3A-1) and cinematic musical rise (unaffected). | Mark Gate passed and checkpoint before transition so refresh never requires another successful code entry within the valid session. |
 | 07. Cove arrival | Veoulla follows through. A wide Marevi Cove cinematic establishes sea, beach, three steps, road, buildings, and distant Everkeep; camera settles into first person. | Waves and first Beach theme; localized narration explains only what is emotionally necessary. | Load the active first-journey route row and Beach introduction package. |
-| 08. Naming | On the Beach, VAR asks Veoulla to choose a personal name and gender/presentation. The magical collar forms/displays the chosen name. | Voice-over prompt, accessible text input, localized confirmation. | Backend writes the personal name, gender/presentation, pronoun/localization choice, and timestamp; local state mirrors it. |
+| 08. Naming | On the Beach, VAR asks Veoulla to choose a personal name and gender/presentation. The magical collar forms/displays the chosen name. | VAR's prompt as text (per §3A-1, no voice-over), accessible text input, localized confirmation. | Backend writes the personal name, gender/presentation, pronoun/localization choice, and timestamp; local state mirrors it. |
 | 09. Beach introduction | Full Marevi Cove introduction and one signature Beach interaction lead to its configured introductory key/reward. The three steps then draw attention toward the road. | Beach ambience remains dominant; VAR explains the first key without over-tutorializing. | Interaction, key type, key availability, and reward animation are resolved from Sheets and checkpointed. |
-| 10. Church | The guided path crosses the three steps and enters the Church. Music stops completely. Veoulla receives the full spiritual-space introduction and completes the configured first-visit interaction/key route. | Silence/room tone, allowed bells/birds, localized narration and captions; voice-over remains speech rather than background music. | Load dated verse/story/quiz/candle configuration and introductory reward from Sheets. |
+| 10. Church | The guided path crosses the three steps and enters the Church. Music stops completely. Veoulla receives the full spiritual-space introduction and completes the configured first-visit interaction/key route. | Silence/room tone, allowed bells/birds (unaffected by §3A-1); localized narration is text. | Load dated verse/story/quiz/candle configuration and introductory reward from Sheets. |
 | 11. Vinyl Café | Journey crosses to Vinyl Café. Veoulla receives the full Café introduction, activates the Walkman, and experiences the configured first song/drink/explanation interaction and key reward. | Café ambience and vinyl crackle; chosen song begins only after interaction. | Walkman unlock, active song rows, five-language explanation, icon/cover/audio references, and reward are Sheet-driven. |
 | 12. VARcade | Veoulla enters VARcade, sees the machine row and scoreboard, and plays the configured introductory machine/challenge before receiving its eligible token key. | Walkman lowers during play; game uses sound effects only. | Machine availability, first game, score rule, reward, icons, and dialogue rows come from Sheets. |
-| 13. Cottage and Marcelino | The Cottage receives a full exterior/interior introduction. Marcelino emerges from the garden with his mailbag, delivers Ahmed's first message, and runs away. | Marcelino sounds, VAR reaction, and Ahmed-message voice-over/captions in the active language. | Message content and five language/audio variants, delivery state, Cottage key/reward, and archive record are Sheet-driven and checkpointed. |
+| 13. Cottage and Marcelino | The Cottage receives a full exterior/interior introduction. Marcelino emerges from the garden with his mailbag, delivers Ahmed's first message, and runs away. | Marcelino sounds (unaffected), VAR reaction as text, and Ahmed-message text in the active language — plus Ahmed's own personal mailbox voice-note, which is a distinct feature per §3A-1 and unaffected by narration voice-over removal. | Message content and five language variants, delivery state, Cottage key/reward, and archive record are Sheet-driven and checkpointed. |
 | 14. Farm | Guided route continues to Sunberry Fields for the full Farm introduction and its configured first plant/water/harvest-or-key interaction. | Farm ambience, wildlife, and localized guidance. | Crop/tutorial state, weather behavior, seed/key reward, icons, timings, and completion rules come from Sheets. |
 | 15. Everkeep approach | The road rises to The Everkeep. The collected configured key set becomes visible/acknowledged and unlocks the entrance. | Quiet elevated ambience, distant clock, key resonance, and restrained narration. | Backend verifies required key inventory against the active first-journey unlock rule; no client-only unlock decision. |
 | 16. Central Hall | Veoulla enters the Central Hall, sees the living progress element and mysterious artifact, and receives the final welcome rather than a danger/cliffhanger. | Museum room tone, footsteps/clock, reduced Walkman, five-language final narration. | Load central-hall state and prepare the final completion transaction. |
-| 17. Freedom and Map | VAR tells Veoulla she is free to explore and presents/unlocks the Map. The Map opens for the first time, showing Veoulla's avatar and the island. | Completion cue, localized voice-over/caption, then normal Map ambience. | Atomically mark `first_journey_completed=1`, store timestamp/version, clear checkpoint, reset any consumed force flag, unlock Map, and log completion. |
+| 17. Freedom and Map | VAR tells Veoulla she is free to explore and presents/unlocks the Map. The Map opens for the first time, showing Veoulla's avatar and the island. | Completion cue, localized text (per §3A-1), then normal Map ambience. | Atomically mark `first_journey_completed=1`, store timestamp/version, clear checkpoint, reset any consumed force flag, unlock Map, and log completion. |
 | 18. Next visit | After completion, normal launches resume at Veoulla's Cottage unless an Admin force flag requests the journey again. | Cottage ambience and date-matched content. | Reconcile device/backend state, fetch current daily content, and avoid replaying original one-time rewards. |
 
 **Still open for later specification, not another First-Opening concept questionnaire**
 
-- Final written dialogue and voice-over scripts in five languages.
+- Final written dialogue scripts in five languages (voice-over scripts no longer apply — see §3A-1).
 - Exact introductory interaction and exact key quantity at each location.
 - Active Gate codes, validity dates, attempt limits, cooldowns, and session duration.
-- Asset production list, voice casting, audio timing, and performance budgets.
+- Asset production list, music/SFX timing, and performance budgets (voice casting no longer applies — see §3A-1).
 - Final Sheet tab/column design and backend transaction API.
 - Exact entry-log retention/privacy rules and Admin log-viewer presentation.
 
@@ -879,7 +920,7 @@ Each item must be discussed again before moving out of this section.
 
 - Proposed primary event ID: `birthday_2026`.
 - Proposed target moment: **26 September 2026 at 00:00:00, Africa/Cairo time**.
-- Exact target, timezone, phase boundaries, enabled state, content, icons, assets, music, voice-over, rewards, and override state are all Sheet-driven and contain no hard-coded birthday logic in React.
+- Exact target, timezone, phase boundaries, enabled state, content, icons, assets, music, narration text (originally voice-over — see §3A-1), rewards, and override state are all Sheet-driven and contain no hard-coded birthday logic in React.
 - Environment phases follow authoritative event time. One-time personal scenes follow player progress, so Veoulla cannot permanently miss the birthday story by being offline at midnight.
 - If the mandatory first journey is still incomplete when the birthday phase becomes active, the first journey finishes first; the birthday opening is queued immediately after Map unlock.
 - Admin can simulate any phase without changing the device clock and can force replay of the one-time birthday story.
@@ -890,10 +931,10 @@ Each item must be discussed again before moving out of this section.
 | --- | --- | --- | --- |
 | B0. Ordinary world | Earlier than T−24h | Normal island time/weather. Cottage countdown continues naturally. | Normal dated content; no obvious party takeover. Very small clues may be enabled individually from Sheets. |
 | B1. Final day | T−24h to T−6h | Countdown enters its final day. A few violet/gold ribbons, sunflowers, parcels, covered objects, and subtle lights begin appearing across existing scenes. | VAR behaves warmly but avoids explaining; Marcelino makes unusual deliveries. No forced travel. |
-| B2. Preparations | T−6h to T−1h | More windows and path lanterns illuminate. Café prepares a special record; Farm shows a prepared sunflower arrangement; Everkeep artifact pulses faintly. | New pre-birthday messages/voice-over may arrive. Birthday rewards remain locked. |
+| B2. Preparations | T−6h to T−1h | More windows and path lanterns illuminate. Café prepares a special record; Farm shows a prepared sunflower arrangement; Everkeep artifact pulses faintly. | New pre-birthday messages arrive as text (per §3A-1). Birthday rewards remain locked. |
 | B3. Near moment | T−1h to T−10m | Sky grading becomes violet/gold and the island feels expectant. Cottage countdown becomes visually prominent without blocking exploration. | VAR may give one gentle reminder that something is approaching. All normal progress remains available. |
 | B4. Invitation | T−10m to T−60s | Map and Cottage clock glow. A non-destructive invitation guides Veoulla toward the Cottage or lets her continue until the final minute. | Current interaction checkpoints before the transition. Admin can disable the guided invitation from Sheets. |
-| B5. Final countdown | T−60s to T0 | Current scene safely settles into a synchronized island countdown. Lights lower briefly; the last ten seconds receive distinct visual beats. | Localized numbers/captions and five-language voice-over cues come from Sheets. If audio is blocked, captions preserve the moment. |
+| B5. Final countdown | T−60s to T0 | Current scene safely settles into a synchronized island countdown. Lights lower briefly; the last ten seconds receive distinct visual beats. | Localized numbers and five-language narration text come from Sheets (per §3A-1, text-only — no audio dependency). |
 | B6. Birthday reveal | T0 to T+1h | At zero, the island changes to warm violet/gold celebration lighting; lanterns, flowers, ribbons, sky effects, and building details reveal together. | VAR delivers the first birthday greeting. Marcelino arrives with Ahmed's special birthday message. The one-time birthday story becomes claimable. |
 | B7. Main celebration | T+1h to T+6h | Every location has a highlighted birthday interaction, but Veoulla keeps freedom of movement. Map shows the suggested celebration trail. | Messages, gifts, keys, Café music, Church blessing/verse, Farm flowers, VARcade challenge, and Everkeep exhibit are enabled according to Sheets. |
 | B8. Birthday evening | T+6h to T+24h | Celebration becomes calmer: sunset/night lighting, glowing paths, warm windows, and persistent special decor. | All main birthday content remains claimable. Missed exact-midnight sequence plays on the first eligible visit. |
@@ -940,8 +981,13 @@ Each item must be discussed again before moving out of this section.
 
 **Open content inputs**
 
-- Exact Ahmed messages, gifts, songs, Bible verse/story, images, final exhibit, voice-over scripts, and reward quantities will be inserted later through the Google Sheets content plan.
+- Exact Ahmed messages, gifts, songs, Bible verse/story, images, final exhibit, narration text (voice-over scripts no longer apply — see §3A-1), and reward quantities will be inserted later through the Google Sheets content plan.
 
 ## 19. Immediate Next Topic
 
 Give Claude Code the M00 prompt, review its implementation evidence, and accept or reject M00 before beginning M01.
+
+
+## Release corrections authorized 2026-09-24
+
+Ahmed explicitly authorized the reviewed application release to the existing Render FREE service, including commit/push/deploy; this supersedes the earlier deployment deferral for this release only. Church interior and candle corner are now completely silent: no hymns, Gospel playback, enable prompt, or reading mute controls. The exterior arrival bell remains. No paid service, billing change, Firebase deployment, real-owner reset, or production review clock is authorized. See `docs/reports/RELEASE_FIXES_2026-09-24.md`.

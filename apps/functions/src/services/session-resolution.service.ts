@@ -37,6 +37,9 @@ export type SessionResolution = SessionResolutionOk | SessionResolutionFail;
  * SESSION_FORBIDDEN — a real, still-active session, just not authorized
  * for this kind of resource — distinct from the 401 cases above it.
  */
+/** How stale a session lookup may be. A termination made elsewhere is honoured within this. */
+const SESSION_RECHECK_REUSE_MS = 4_000;
+
 export async function resolveActiveSession(
   gateway: SheetGateway,
   requestedKind: SessionKind,
@@ -47,7 +50,12 @@ export async function resolveActiveSession(
     return { ok: false, code: 'SESSION_REQUIRED' };
   }
 
-  const found = await gateway.findByPrimaryKey('06_SESSIONS', sessionId, { bypass: true });
+  const found = await gateway.findByPrimaryKey('06_SESSIONS', sessionId, {
+    bypass: true,
+    // Every player request re-checks the session; requests a few seconds apart share one read.
+    // Any write to the tab (logout, heartbeat, termination by this process) drops the copy at once.
+    maxAgeMs: SESSION_RECHECK_REUSE_MS,
+  });
   if (!found) {
     return { ok: false, code: 'SESSION_INVALID' };
   }

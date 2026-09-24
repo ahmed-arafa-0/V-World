@@ -1,0 +1,14 @@
+.text {
+  color: inherit;
+  text-align: start;
+}
+.line {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.cinematic,
+.bubble {
+  color: inherit;
+}

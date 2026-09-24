@@ -6,24 +6,24 @@
 }
 
 .stepButton {
-  width: 2.5rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: none;
   border-radius: 0.4rem;
-  background: var(--accent-muted);
-  color: var(--accent-contrast);
+  background: #b89b6538;
+  color: #f7dfae;
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
 }
 
 .stepButton:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--accent-contrast);
+  background: #b89b6560;
+  color: #f7dfae;
 }
 
 .stepButton:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid #ffe0a1;
   outline-offset: 2px;
 }
 
@@ -41,15 +41,15 @@
   font-size: 1.75rem;
   font-weight: 700;
   border-radius: 0.6rem;
-  background: var(--surface);
-  border: 2px solid var(--accent-muted);
-  color: var(--text);
+  background: #1c1b21aa;
+  border: 1px solid #b89b6599;
+  color: #fff0d2;
   user-select: none;
   cursor: default;
 }
 
 .value:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid #ffe0a1;
   outline-offset: 2px;
 }
 

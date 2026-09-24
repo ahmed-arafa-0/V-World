@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { ApiError } from '@veoullas-world/contracts';
-import { httpStatusForCode } from '../errors/app-error.js';
+import { httpStatusForCode, toSafeApiError } from '../errors/app-error.js';
 import { clearSessionCookie, readSessionCookie, type CookieEnv } from '../http/cookies.js';
 import type { SheetGateway } from '../repositories/sheet-gateway.js';
 import { resolveActiveSession } from '../services/session-resolution.service.js';
@@ -39,7 +39,15 @@ export function createAdminAuthMiddleware(
     }
 
     const sessionId = readSessionCookie(req, 'admin');
-    const resolution = await resolveActiveSession(gateway, 'admin', sessionId, now());
+    let resolution: Awaited<ReturnType<typeof resolveActiveSession>>;
+    try {
+      resolution = await resolveActiveSession(gateway, 'admin', sessionId, now());
+    } catch (error) {
+      const safe = toSafeApiError(error);
+      const body: ApiError = { ok: false, code: safe.code, message: safe.message };
+      res.status(safe.httpStatus).json(body);
+      return;
+    }
 
     if (!resolution.ok) {
       clearSessionCookie(res, 'admin', cookieEnv());

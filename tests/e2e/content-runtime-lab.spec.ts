@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { skipGateOpening } from './helpers/preGate';
 
 /**
  * M03-A Content Runtime Lab coverage against the real Sheet (via the local
@@ -11,6 +12,7 @@ import { expect, test, type Page } from '@playwright/test';
 const REAL_GATE_CODE = process.env.E2E_GATE_CODE;
 
 async function enterGateAndReachLab(page: Page) {
+  await skipGateOpening(page);
   await page.goto('/');
   const dials = page.getByRole('spinbutton');
   for (let i = 0; i < 4; i++) {

@@ -8,7 +8,6 @@ import type {
   RuntimeIconEntry,
   RuntimeLanguage,
   RuntimeUiTextEntry,
-  RuntimeVoiceoverEntry,
 } from '@veoullas-world/contracts';
 import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@veoullas-world/contracts';
 import type { NormalizedRow } from '@veoullas-world/sheet-schema';
@@ -155,49 +154,6 @@ function buildIcons(
     });
 }
 
-function buildVoiceover(
-  rows: NormalizedRow[],
-  assetIndex: Map<string, AssetIndexEntry>,
-  diagnostics: ContentDiagnostic[],
-): RuntimeVoiceoverEntry[] {
-  const entries = rows
-    .filter((r) => r.primaryKeyValue)
-    .map((r) => {
-      const voiceoverId = r.primaryKeyValue!;
-      const audioAssetId = str(r.raw.audio_asset_id);
-      const asset = audioAssetId ? assetIndex.get(audioAssetId) : undefined;
-      if (audioAssetId && !asset) {
-        diagnostics.push({
-          code: 'INVALID_VOICEOVER_ASSET_REFERENCE',
-          tab: '16_VOICEOVER',
-          subjectId: voiceoverId,
-          message: `Voiceover "${voiceoverId}" references asset "${audioAssetId}", which is missing or disabled.`,
-        });
-      }
-      return {
-        voiceoverId,
-        contentType: str(r.raw.content_type),
-        contentId: str(r.raw.content_id),
-        locale: str(r.raw.locale),
-        mediaRef: asset ? buildMediaRef(audioAssetId, asset.version) : null,
-        captionText: str(r.raw.caption_text),
-        direction: direction(r.raw.direction),
-        durationMs: num(r.values.duration_ms),
-        captionStartMs: num(r.values.caption_start_ms),
-        captionEndMs: num(r.values.caption_end_ms),
-      };
-    });
-
-  diagnostics.push(
-    ...checkLocaleGroups(
-      '16_VOICEOVER',
-      entries.map((e) => ({ key: `${e.contentType}:${e.contentId}`, locale: e.locale })),
-    ),
-  );
-
-  return entries;
-}
-
 function buildUiText(
   rows: NormalizedRow[],
   diagnostics: ContentDiagnostic[],
@@ -225,41 +181,32 @@ function buildUiText(
   return entries;
 }
 
+/**
+ * `15_DIALOGUE.voiceover_id` may still hold a value (the column and every
+ * historical row are untouched, per Ahmed's 2026-09-17 decision to remove
+ * voice-over without a destructive schema migration) — this runtime simply
+ * never reads or resolves it anymore. Narration is text-only; `displayMode`
+ * alone decides cinematic-narration vs. speech-bubble presentation.
+ */
 function buildDialogue(
   rows: NormalizedRow[],
-  voiceoverById: Map<string, RuntimeVoiceoverEntry>,
   diagnostics: ContentDiagnostic[],
 ): RuntimeDialogueLine[] {
   const entries = rows
     .filter((r) => r.primaryKeyValue)
-    .map((r) => {
-      const dialogueRowId = r.primaryKeyValue!;
-      const dialogueId = str(r.raw.dialogue_id);
-      const voiceoverId = str(r.raw.voiceover_id);
-      const voiceover = voiceoverId ? voiceoverById.get(voiceoverId) : undefined;
-      if (voiceoverId && !voiceover) {
-        diagnostics.push({
-          code: 'INVALID_DIALOGUE_VOICEOVER_REFERENCE',
-          tab: '15_DIALOGUE',
-          subjectId: dialogueRowId,
-          message: `Dialogue row "${dialogueRowId}" references voiceover "${voiceoverId}", which is missing or disabled.`,
-        });
-      }
-      return {
-        dialogueRowId,
-        dialogueId,
-        groupId: str(r.raw.group_id),
-        sequence: num(r.values.sequence),
-        speakerId: str(r.raw.speaker_id),
-        locale: str(r.raw.locale),
-        text: str(r.raw.text),
-        direction: direction(r.raw.direction),
-        emotion: str(r.raw.emotion),
-        displayMode: str(r.raw.display_mode),
-        voiceoverMediaRef: voiceover?.mediaRef ?? null,
-        requiresResponse: r.values.requires_response === true,
-      };
-    })
+    .map((r) => ({
+      dialogueRowId: r.primaryKeyValue!,
+      dialogueId: str(r.raw.dialogue_id),
+      groupId: str(r.raw.group_id),
+      sequence: num(r.values.sequence),
+      speakerId: str(r.raw.speaker_id),
+      locale: str(r.raw.locale),
+      text: str(r.raw.text),
+      direction: direction(r.raw.direction),
+      emotion: str(r.raw.emotion),
+      displayMode: str(r.raw.display_mode),
+      requiresResponse: r.values.requires_response === true,
+    }))
     .sort((a, b) => a.groupId.localeCompare(b.groupId) || a.sequence - b.sequence);
 
   diagnostics.push(
@@ -275,26 +222,34 @@ function buildDialogue(
 /**
  * Assembles the owner-authenticated content-runtime payload: normalized,
  * enabled-only rows from 07_LANGUAGES/08_UI_TEXT/09_ICONS/10_ASSETS/
- * 15_DIALOGUE/16_VOICEOVER, with icon/voiceover/dialogue references resolved
- * to stable same-origin media paths (never a raw Drive file ID) and content
- * diagnostics for duplicate localized rows, missing English fallbacks, and
- * invalid icon/asset/dialogue/voice-over references. Disabled rows never
- * reach this response at all — `readEnabledRows` filters them out before any
- * mapping happens.
+ * 15_DIALOGUE, with icon/dialogue references resolved to stable same-origin
+ * media paths (never a raw Drive file ID) and content diagnostics for
+ * duplicate localized rows, missing English fallbacks, and invalid
+ * icon/asset references. Disabled rows never reach this response at all —
+ * `readEnabledRows` filters them out before any mapping happens.
+ *
+ * `16_VOICEOVER` is deliberately never read here — Ahmed's 2026-09-17
+ * decision removed voice-over from the runtime entirely (narration/dialogue
+ * is text-only); the tab and its historical rows remain fully intact in the
+ * Sheet, this is only a reduction in what the API layer reads/exposes.
  */
 export async function computeContentRuntime(
   gateway: SheetGateway,
   options?: ReadOptions,
 ): Promise<ContentRuntimeResponse> {
-  const [languageRows, uiTextRows, iconRows, assetRows, dialogueRows, voiceoverRows] =
-    await Promise.all([
-      gateway.readEnabledRows('07_LANGUAGES', options),
-      gateway.readEnabledRows('08_UI_TEXT', options),
-      gateway.readEnabledRows('09_ICONS', options),
-      gateway.readEnabledRows('10_ASSETS', options),
-      gateway.readEnabledRows('15_DIALOGUE', options),
-      gateway.readEnabledRows('16_VOICEOVER', options),
-    ]);
+  // Fetched as one batched Sheets API request rather than five individual
+  // concurrent reads — the individual-read version was a confirmed
+  // contributor to real Google Sheets 429s under e2e load (see
+  // docs/reports/PHASE1_VOICEOVER_REMOVAL_CHECKPOINT.md §6).
+  const tabs = await gateway.readEnabledRowsBatch(
+    ['07_LANGUAGES', '08_UI_TEXT', '09_ICONS', '10_ASSETS', '15_DIALOGUE'],
+    options,
+  );
+  const languageRows = tabs['07_LANGUAGES']!;
+  const uiTextRows = tabs['08_UI_TEXT']!;
+  const iconRows = tabs['09_ICONS']!;
+  const assetRows = tabs['10_ASSETS']!;
+  const dialogueRows = tabs['15_DIALOGUE']!;
 
   const diagnostics: ContentDiagnostic[] = [];
   const assetIndex = buildAssetIndex(assetRows);
@@ -302,9 +257,7 @@ export async function computeContentRuntime(
   const languages = buildLanguages(languageRows);
   const uiText = buildUiText(uiTextRows, diagnostics);
   const icons = buildIcons(iconRows, assetIndex, diagnostics);
-  const voiceover = buildVoiceover(voiceoverRows, assetIndex, diagnostics);
-  const voiceoverById = new Map(voiceover.map((v) => [v.voiceoverId, v]));
-  const dialogue = buildDialogue(dialogueRows, voiceoverById, diagnostics);
+  const dialogue = buildDialogue(dialogueRows, diagnostics);
   const assets = buildAssetStatuses(assetRows);
 
   return {
@@ -312,7 +265,6 @@ export async function computeContentRuntime(
     languages,
     uiText,
     dialogue,
-    voiceover,
     icons,
     assets,
     diagnostics,

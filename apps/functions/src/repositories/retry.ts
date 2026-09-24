@@ -5,6 +5,9 @@ export interface RetryOptions {
   baseDelayMs?: number;
 }
 
+/** First wait after a 429; doubles per attempt (about 1 s then 2 s with the default 3 attempts). */
+export const RATE_LIMIT_BASE_DELAY_MS = 1000;
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -24,7 +27,13 @@ export async function withRetry<T>(fn: () => Promise<T>, options?: RetryOptions)
       if (!retryable || attempt === maxAttempts) {
         throw err;
       }
-      await sleep(baseDelayMs * 2 ** (attempt - 1));
+      // A rate limit needs real breathing room (a 50 ms retry only spends more quota); other
+      // retryable errors keep the short delay. Jittered and bounded by maxAttempts.
+      const base =
+        err instanceof AppError && err.code === 'SHEET_RATE_LIMITED'
+          ? Math.max(baseDelayMs, RATE_LIMIT_BASE_DELAY_MS)
+          : baseDelayMs;
+      await sleep(base * 2 ** (attempt - 1) * (0.75 + Math.random() * 0.5));
     }
   }
   throw lastError;

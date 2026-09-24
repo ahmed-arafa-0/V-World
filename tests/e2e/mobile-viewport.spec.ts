@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { skipGateOpening } from './helpers/preGate';
 
 test.describe('Mobile viewport', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('Gate renders without horizontal overflow on a small screen', async ({ page }) => {
+    await skipGateOpening(page);
     await page.goto('/');
-
-    await expect(page.getByRole('heading', { name: "Veoulla's World" })).toBeVisible();
+    // The immersive Gate has no page heading (Phase 1 presentation decision); the dials are the landmark.
     await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(

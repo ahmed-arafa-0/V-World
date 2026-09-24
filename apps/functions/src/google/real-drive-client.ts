@@ -36,6 +36,11 @@ function toMetadata(file: drive_v3.Schema$File): DriveFileMetadata {
   };
 }
 
+/** Escapes a Drive `files.list` query string literal — only the one special character (`'`) the Drive query grammar requires escaping in a plain `name = '...'` clause. */
+function escapeDriveQueryLiteral(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 /** Backend-only, read-only Google Drive client. No write/upload method exists on this class. */
 export class RealGoogleDriveClient implements GoogleDriveClient {
   private readonly drive: drive_v3.Drive;
@@ -49,6 +54,41 @@ export class RealGoogleDriveClient implements GoogleDriveClient {
     try {
       const resp = await this.drive.files.get({ fileId, fields: METADATA_FIELDS });
       return toMetadata(resp.data);
+    } catch (err) {
+      throw mapDriveError(err);
+    }
+  }
+
+  async findFilesByName(name: string): Promise<DriveFileMetadata[]> {
+    try {
+      const resp = await this.drive.files.list({
+        q: `name = '${escapeDriveQueryLiteral(name)}' and trashed = false`,
+        fields: `files(${METADATA_FIELDS})`,
+        pageSize: 50,
+        spaces: 'drive',
+      });
+      return (resp.data.files ?? []).map(toMetadata);
+    } catch (err) {
+      throw mapDriveError(err);
+    }
+  }
+
+  async listFilesInFolder(folderId: string): Promise<DriveFileMetadata[]> {
+    try {
+      const out: DriveFileMetadata[] = [];
+      let pageToken: string | undefined;
+      do {
+        const resp = await this.drive.files.list({
+          q: `'${escapeDriveQueryLiteral(folderId)}' in parents and trashed = false`,
+          fields: `nextPageToken, files(${METADATA_FIELDS})`,
+          pageSize: 100,
+          pageToken,
+          spaces: 'drive',
+        });
+        out.push(...(resp.data.files ?? []).map(toMetadata));
+        pageToken = resp.data.nextPageToken ?? undefined;
+      } while (pageToken);
+      return out;
     } catch (err) {
       throw mapDriveError(err);
     }

@@ -16,27 +16,28 @@ export async function buildBootstrapResponse(
   gateway: SheetGateway,
   options?: ReadOptions,
 ): Promise<BootstrapResponse> {
-  const [
-    appConfig,
-    languages,
-    locations,
-    storyBeats,
-    icons,
-    assets,
-    eventsResult,
-    readmeRaw,
-    schemaHealth,
-  ] = await Promise.all([
-    gateway.readTab('01_APP_CONFIG', options),
-    gateway.readEnabledRows('07_LANGUAGES', options),
-    gateway.readEnabledRows('11_LOCATIONS', options),
-    gateway.readEnabledRows('14_STORY_BEATS', options),
-    gateway.readEnabledRows('09_ICONS', options),
-    gateway.readEnabledRows('10_ASSETS', options),
-    gateway.readTab('17_EVENTS', options),
-    gateway.getRawTab('00_README', options),
+  // computeSchemaHealth() already fetches every table tab (01_APP_CONFIG,
+  // 07_LANGUAGES, etc.) from the Sheet in one batched request internally.
+  // Awaiting it first — instead of racing it against the individual per-tab
+  // reads below — lets those reads resolve from cache instead of firing
+  // their own redundant, uncoalesced Sheets API calls. Racing them (the
+  // previous behavior) was a confirmed contributor to real Google Sheets
+  // 429s under e2e load (see docs/reports/PHASE1_VOICEOVER_REMOVAL_CHECKPOINT.md §6).
+  const [schemaHealth, readmeRaw] = await Promise.all([
     computeSchemaHealth(gateway, options),
+    gateway.getRawTab('00_README', options),
   ]);
+
+  const [appConfig, languages, locations, storyBeats, icons, assets, eventsResult] =
+    await Promise.all([
+      gateway.readTab('01_APP_CONFIG', options),
+      gateway.readEnabledRows('07_LANGUAGES', options),
+      gateway.readEnabledRows('11_LOCATIONS', options),
+      gateway.readEnabledRows('14_STORY_BEATS', options),
+      gateway.readEnabledRows('09_ICONS', options),
+      gateway.readEnabledRows('10_ASSETS', options),
+      gateway.readTab('17_EVENTS', options),
+    ]);
 
   const configValues = new Map<string, string>();
   for (const configRow of appConfig.rows) {
@@ -73,6 +74,10 @@ export async function buildBootstrapResponse(
       displayNameTextId: str(r.raw.display_name_text_id),
       subtitleTextId: str(r.raw.subtitle_text_id),
       mapOrder: num(r.values.map_order),
+      firstVisitOrder: num(r.values.first_visit_order),
+      entrySceneId: str(r.raw.entry_scene_id),
+      keyTypeId: str(r.raw.key_type_id),
+      ambientAssetId: str(r.raw.ambient_asset_id),
     })),
     storyBeats: storyBeats
       .map((r) => ({

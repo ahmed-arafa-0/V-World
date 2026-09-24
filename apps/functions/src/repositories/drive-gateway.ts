@@ -4,6 +4,7 @@ import type {
   DriveFileMetadata,
   GoogleDriveClient,
 } from '../google/drive-types.js';
+import { DRIVE_FOLDER_MIME_TYPE } from '../google/drive-types.js';
 import { withRetry } from './retry.js';
 
 /**
@@ -83,5 +84,82 @@ export class DriveGateway {
     }
 
     return false;
+  }
+
+  /**
+   * Discovers the one Drive file with an exact `name` that actually lives
+   * under `rootFolderId`, without the caller ever needing to already know
+   * its file ID. Read-only (`findFilesByName` + the existing
+   * `isUnderRoot` ancestry walk) — never a write/upload. A same-named file
+   * that exists elsewhere in the service account's visible Drive (outside
+   * the root) is never treated as a match; more than one match actually
+   * under the root is reported as ambiguous rather than guessing.
+   */
+  async findUniqueUnderRoot(
+    name: string,
+    rootFolderId: string,
+  ): Promise<
+    | { kind: 'found'; metadata: DriveFileMetadata }
+    | { kind: 'missing' }
+    | { kind: 'ambiguous'; matches: DriveFileMetadata[] }
+  > {
+    const candidates = await withRetry(() => this.client.findFilesByName(name));
+    const nonTrashed = candidates.filter((c) => !c.trashed);
+
+    const underRoot: DriveFileMetadata[] = [];
+    for (const candidate of nonTrashed) {
+      if (await this.isUnderRoot(candidate, rootFolderId)) underRoot.push(candidate);
+    }
+
+    if (underRoot.length === 0) return { kind: 'missing' };
+    if (underRoot.length > 1) return { kind: 'ambiguous', matches: underRoot };
+    return { kind: 'found', metadata: underRoot[0]! };
+  }
+
+  /**
+   * Read-only discovery of every non-trashed PDF directly inside `folderId`,
+   * but only after proving the folder itself is a real, non-trashed folder
+   * living under `rootFolderId` — a folder ID pasted from a Drive share link
+   * is never trusted on its own. A folder found outside the root, missing,
+   * or not actually a folder returns `folder_not_found`, never partial
+   * results. Never a write/upload capability.
+   */
+  async discoverPdfsInFolder(
+    folderId: string,
+    rootFolderId: string,
+  ): Promise<
+    | { kind: 'folder_not_found'; reason: string }
+    | { kind: 'no_pdfs'; children: DriveFileMetadata[] }
+    | { kind: 'found'; pdf: DriveFileMetadata }
+    | { kind: 'ambiguous'; pdfs: DriveFileMetadata[] }
+  > {
+    let folder: DriveFileMetadata;
+    try {
+      folder = await withRetry(() => this.client.getFileMetadata(folderId));
+    } catch {
+      return { kind: 'folder_not_found', reason: 'the folder could not be read' };
+    }
+    if (folder.trashed) return { kind: 'folder_not_found', reason: 'the folder is trashed' };
+    if (folder.mimeType !== DRIVE_FOLDER_MIME_TYPE) {
+      return { kind: 'folder_not_found', reason: `not a folder (mimeType "${folder.mimeType}")` };
+    }
+    // The configured asset root itself has nothing "above" it (its own
+    // `parents` is typically empty), so it can never satisfy a strict
+    // below-root containment proof against itself — it trivially IS the
+    // root of the approved tree. Every other folder still needs the real
+    // ancestry walk.
+    const isRootItself = folder.id === rootFolderId;
+    if (!isRootItself && !(await this.isUnderRoot(folder, rootFolderId))) {
+      return {
+        kind: 'folder_not_found',
+        reason: 'the folder is outside the configured Drive asset root',
+      };
+    }
+
+    const children = await withRetry(() => this.client.listFilesInFolder(folderId));
+    const pdfs = children.filter((c) => !c.trashed && c.mimeType === 'application/pdf');
+    if (pdfs.length === 0) return { kind: 'no_pdfs', children };
+    if (pdfs.length > 1) return { kind: 'ambiguous', pdfs };
+    return { kind: 'found', pdf: pdfs[0]! };
   }
 }

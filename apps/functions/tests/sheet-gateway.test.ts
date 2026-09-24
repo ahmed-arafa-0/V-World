@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SheetGateway } from '../src/repositories/sheet-gateway.js';
+import { FRESH_REUSE_MS, SheetGateway } from '../src/repositories/sheet-gateway.js';
 import { AppError } from '../src/errors/app-error.js';
 import { FakeGoogleSheetsClient } from './helpers/fake-sheets-client.js';
+
+/** Upstream read requests of either kind (a configuration tab is fetched via a batch). */
+const reads = (c: FakeGoogleSheetsClient) => c.callCounts.getValues + c.callCounts.batchGetValues;
 
 const KEYS_HEADER = [
   'key_type_id',
@@ -82,14 +85,60 @@ describe('SheetGateway caching', () => {
     const { client, gateway } = makeGateway();
     await gateway.getRawTab('21_KEYS');
     await gateway.getRawTab('21_KEYS');
-    expect(client.callCounts.getValues).toBe(1);
+    expect(reads(client)).toBe(1);
   });
 
-  it('bypasses the cache when asked', async () => {
+  it('a strict bypass always reads upstream', async () => {
     const { client, gateway } = makeGateway();
     await gateway.getRawTab('21_KEYS');
-    await gateway.getRawTab('21_KEYS', { bypass: true });
-    expect(client.callCounts.getValues).toBe(2);
+    await gateway.getRawTab('21_KEYS', { bypass: true, strict: true });
+    expect(reads(client)).toBe(2);
+  });
+
+  it('a bypass read reuses a copy fetched moments ago, but never one that is simply older', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const { client, gateway } = makeGateway();
+      await gateway.getRawTab('21_KEYS');
+      await gateway.getRawTab('21_KEYS', { bypass: true }); // inside the window: reused
+      expect(reads(client)).toBe(1);
+      vi.setSystemTime(Date.now() + FRESH_REUSE_MS + 50);
+      await gateway.getRawTab('21_KEYS', { bypass: true }); // older than the window: real read
+      expect(reads(client)).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a bypass read honors a caller-supplied maxAgeMs instead of the default window', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const { client, gateway } = makeGateway();
+      await gateway.getRawTab('04_ADMIN_FLAGS');
+      vi.setSystemTime(Date.now() + FRESH_REUSE_MS + 50); // past the default window...
+      // ...but within a caller-requested 15s window: still served from the cache.
+      await gateway.getRawTab('04_ADMIN_FLAGS', { bypass: true, maxAgeMs: 15_000 });
+      expect(reads(client)).toBe(1);
+      vi.setSystemTime(Date.now() + 15_000 + 50); // now past the caller's own window too
+      await gateway.getRawTab('04_ADMIN_FLAGS', { bypass: true, maxAgeMs: 15_000 });
+      expect(reads(client)).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a write updates the cache in place instead of forcing the next bypass read upstream', async () => {
+    const { client, gateway } = makeGateway();
+    await gateway.getRawTab('21_KEYS'); // populate the cache
+    await gateway.updateByPrimaryKey('21_KEYS', 'key_shell', { notes: 'changed' });
+    const before = reads(client);
+    // A follow-up bypass read of this SAME action sees the patch immediately — no second round trip.
+    const raw = await gateway.getRawTab('21_KEYS', { bypass: true });
+    expect(reads(client)).toBe(before);
+    expect(raw.flat()).toContain('changed');
+    // A strict bypass (the optimistic pre-write check) still always confirms against the real Sheet.
+    await gateway.getRawTab('21_KEYS', { bypass: true, strict: true });
+    expect(reads(client)).toBe(before + 1);
   });
 
   it('batch reads share one underlying call and populate the per-tab cache', async () => {
@@ -99,7 +148,7 @@ describe('SheetGateway caching', () => {
 
     // A subsequent single-tab read should now be served from the cache the batch populated.
     await gateway.getRawTab('21_KEYS');
-    expect(client.callCounts.getValues).toBe(0);
+    expect(reads(client)).toBe(1);
 
     await gateway.getRawTabsBatch(['21_KEYS', '39_VALIDATION_LISTS']);
     expect(client.callCounts.batchGetValues).toBe(1);
@@ -228,6 +277,80 @@ describe('SheetGateway.appendIfAbsent (idempotency foundation)', () => {
     expect(first.created).toBe(true);
     expect(retry.created).toBe(false);
     expect(retry.row).toEqual(first.row);
+    expect(client.callCounts.appendValues).toBe(1);
+  });
+});
+
+describe('SheetGateway request economy', () => {
+  it('reads several tabs requested in the same tick with ONE upstream request', async () => {
+    const client = new FakeGoogleSheetsClient(makeWorkbook());
+    const gateway = new SheetGateway(client);
+    await Promise.all([gateway.getRawTab('21_KEYS'), gateway.getRawTab('39_VALIDATION_LISTS')]);
+    expect(client.callCounts.batchGetValues).toBe(1);
+    expect(client.callCounts.getValues).toBe(0);
+    // Both are now cached individually.
+    await gateway.getRawTab('21_KEYS');
+    expect(client.callCounts.batchGetValues + client.callCounts.getValues).toBe(1);
+  });
+
+  it('a lone tab is still one plain read', async () => {
+    const client = new FakeGoogleSheetsClient(makeWorkbook());
+    await new SheetGateway(client).getRawTab('24_PLAYER_PROGRESS');
+    expect(client.callCounts.getValues).toBe(1);
+    expect(client.callCounts.batchGetValues).toBe(0);
+  });
+
+  it('fetching one configuration tab refreshes the other missing configuration tabs in the same request', async () => {
+    const client = new FakeGoogleSheetsClient(makeWorkbook());
+    const gateway = new SheetGateway(client);
+    await gateway.getRawTab('21_KEYS');
+    expect(client.callCounts.batchGetValues).toBe(1);
+    expect(client.callCounts.getValues).toBe(0);
+    // Another configuration tab is now already cached: no further request.
+    await gateway.getRawTab('39_VALIDATION_LISTS');
+    await gateway.getRawTab('22_KEY_RULES');
+    expect(client.callCounts.batchGetValues + client.callCounts.getValues).toBe(1);
+    // Per-player tabs never ride along and are still read on their own.
+    await gateway.getRawTab('24_PLAYER_PROGRESS');
+    expect(client.callCounts.getValues).toBe(1);
+  });
+
+  it('a multi-column update is ONE write request, not one per column', async () => {
+    const client = new FakeGoogleSheetsClient(makeWorkbook());
+    const gateway = new SheetGateway(client);
+    await gateway.updateByPrimaryKey('21_KEYS', 'key_shell', { shape: 'new', rarity: 'rare' });
+    expect(client.callCounts.batchUpdateValues).toBe(1);
+    expect(client.callCounts.updateValues).toBe(0);
+    const row = (await gateway.readTab('21_KEYS', { bypass: true })).rows.find(
+      (r) => r.primaryKeyValue === 'key_shell',
+    );
+    expect(row?.raw.shape).toBe('new');
+    expect(row?.raw.rarity).toBe('rare');
+  });
+
+  it('a fresh-row read (bypass) does not also re-read the validation lists', async () => {
+    const client = new FakeGoogleSheetsClient(makeWorkbook());
+    const gateway = new SheetGateway(client);
+    await gateway.readTab('21_KEYS'); // warms 21_KEYS and 39_VALIDATION_LISTS
+    const before = reads(client);
+    await gateway.findByPrimaryKey('21_KEYS', 'key_shell', { bypass: true, strict: true });
+    expect(reads(client) - before).toBe(1);
+  });
+
+  it('append-if-absent reads the tab once, not once to look and again to append', async () => {
+    const client = new FakeGoogleSheetsClient(makeWorkbook());
+    const gateway = new SheetGateway(client);
+    await gateway.readTab('21_KEYS');
+    await gateway.getRawTab('21_KEYS', { bypass: true, strict: true }); // a real, fresh copy exists
+    gateway.clearCache();
+    await gateway.readTab('39_VALIDATION_LISTS');
+    const before = reads(client);
+    await gateway.appendIfAbsent('21_KEYS', 'key_new', () => ({
+      key_type_id: 'key_new',
+      enabled: 'TRUE',
+    }));
+    // Never a look followed by a second read to append: at most one read, none if it was just fetched.
+    expect(reads(client) - before).toBeLessThanOrEqual(1);
     expect(client.callCounts.appendValues).toBe(1);
   });
 });

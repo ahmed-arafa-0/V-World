@@ -21,8 +21,19 @@ function hasRequiredFields(
   );
 }
 
-export function resolveCredentialPath(configDir: string = DEFAULT_CONFIG_DIR): string {
-  return path.join(configDir, CREDENTIAL_FILENAME);
+/**
+ * Resolution order: an explicit `configDir` argument (tests only) always
+ * wins; otherwise `GOOGLE_SERVICE_ACCOUNT_PATH` — the exact file path a
+ * host's secret-file mechanism placed the credential at (e.g. Render's
+ * Secret Files, which mount at a path outside this repo, not under
+ * `apps/functions/config-private`) — is used verbatim if set; otherwise the
+ * original local/Firebase default path.
+ */
+export function resolveCredentialPath(configDir?: string): string {
+  if (configDir !== undefined) return path.join(configDir, CREDENTIAL_FILENAME);
+  const override = process.env.GOOGLE_SERVICE_ACCOUNT_PATH?.trim();
+  if (override) return override;
+  return path.join(DEFAULT_CONFIG_DIR, CREDENTIAL_FILENAME);
 }
 
 /**

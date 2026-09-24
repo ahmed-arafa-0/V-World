@@ -1,11 +1,12 @@
 /**
- * M03-A content-runtime contracts: localization, UI text, dialogue,
- * voice-over, icon, and asset-status data for the owner-authenticated
- * frontend. Every shape here is safe to send to the browser — never a raw
- * Google Drive file ID, never a disabled/incomplete row, never a Sheet
- * column outside this allowlist. Drive binary streaming (M03-B) does not
- * exist yet: `mediaRef` is only a stable same-origin path built from an
- * asset ID and version, not a working media URL.
+ * M03-A content-runtime contracts: localization, UI text, dialogue, icon,
+ * and asset-status data for the owner-authenticated frontend. Every shape
+ * here is safe to send to the browser — never a raw Google Drive file ID,
+ * never a disabled/incomplete row, never a Sheet column outside this
+ * allowlist. Narration/dialogue is text-only (Ahmed's 2026-09-17 decision
+ * removed voice-over entirely — see CLAUDE.md); `mediaRef` fields that
+ * remain (icons, assets) are same-origin paths built from an asset ID and
+ * version, not raw Drive URLs.
  */
 
 /** The five locales approved in the Living Bible. Order matches 07_LANGUAGES sort_order. */
@@ -37,6 +38,15 @@ export interface RuntimeUiTextEntry {
   ariaLabel: string;
 }
 
+/**
+ * Narration/dialogue is presented as text only — Ahmed's 2026-09-17 product
+ * decision removed voice-over from the entire experience across all three
+ * phases (see CLAUDE.md and the Living Bible §3A/§8A/§18J). This line
+ * therefore carries no audio reference of any kind; `displayMode` alone
+ * decides cinematic-narration vs. speech-bubble presentation. `16_VOICEOVER`
+ * itself, and its Sheet rows, are untouched — this contract simply no
+ * longer reads or exposes them.
+ */
 export interface RuntimeDialogueLine {
   dialogueRowId: string;
   dialogueId: string;
@@ -48,23 +58,7 @@ export interface RuntimeDialogueLine {
   direction: ContentDirection;
   emotion: string;
   displayMode: string;
-  /** Resolved same-origin media reference, or null when unset/invalid/disabled. */
-  voiceoverMediaRef: string | null;
   requiresResponse: boolean;
-}
-
-export interface RuntimeVoiceoverEntry {
-  voiceoverId: string;
-  contentType: string;
-  contentId: string;
-  locale: string;
-  /** Resolved same-origin media reference, or null when the referenced asset is missing/disabled. */
-  mediaRef: string | null;
-  captionText: string;
-  direction: ContentDirection;
-  durationMs: number;
-  captionStartMs: number;
-  captionEndMs: number;
 }
 
 export interface RuntimeIconEntry {
@@ -91,15 +85,11 @@ export interface RuntimeAssetStatus {
 }
 
 export type ContentDiagnosticCode =
-  | 'DUPLICATE_LOCALIZED_ROW'
-  | 'MISSING_ENGLISH_FALLBACK'
-  | 'INVALID_ICON_ASSET_REFERENCE'
-  | 'INVALID_VOICEOVER_ASSET_REFERENCE'
-  | 'INVALID_DIALOGUE_VOICEOVER_REFERENCE';
+  'DUPLICATE_LOCALIZED_ROW' | 'MISSING_ENGLISH_FALLBACK' | 'INVALID_ICON_ASSET_REFERENCE';
 
 export interface ContentDiagnostic {
   code: ContentDiagnosticCode;
-  tab: '08_UI_TEXT' | '09_ICONS' | '15_DIALOGUE' | '16_VOICEOVER';
+  tab: '08_UI_TEXT' | '09_ICONS' | '15_DIALOGUE';
   /** A stable, non-sensitive identifier for the affected group (never a full row dump). */
   subjectId: string;
   message: string;
@@ -110,7 +100,6 @@ export interface ContentRuntimeResponse {
   languages: RuntimeLanguage[];
   uiText: RuntimeUiTextEntry[];
   dialogue: RuntimeDialogueLine[];
-  voiceover: RuntimeVoiceoverEntry[];
   icons: RuntimeIconEntry[];
   assets: RuntimeAssetStatus[];
   diagnostics: ContentDiagnostic[];

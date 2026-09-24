@@ -1,9 +1,21 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { useLocaleStore } from '../src/i18n/localeStore';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { GatePage } from '../src/features/gate/GatePage';
 import { installMockFetch, type MockFetchOptions } from './helpers/mockApi';
+
+beforeEach(() => {
+  // Dial-focused tests in this file assume the one-time pre-Gate opening
+  // sequence (unseen VAR line → reveal) has already played — that sequence
+  // has its own dedicated coverage below and in PreGateSequence.test.tsx.
+  window.sessionStorage.setItem('vw_gate_opening_seen', 'true');
+});
+
+afterEach(() => {
+  window.sessionStorage.clear();
+});
 
 function gateCallCount(fetchMock: ReturnType<typeof vi.fn>): number {
   return fetchMock.mock.calls.filter((call: unknown[]) => call[0] === '/api/auth/gate').length;
@@ -17,6 +29,26 @@ function renderGate(options: MockFetchOptions = {}) {
     </MemoryRouter>,
   );
 }
+
+describe('GatePage — language flags', () => {
+  it('shows one flag per language with its native name, a selected state and no Log out before login', async () => {
+    renderGate();
+    await screen.findByRole('group', { name: /four-digit gate code/i });
+    const flags = screen.getAllByTestId(/^language-/);
+    expect(flags).toHaveLength(5);
+    expect(screen.getByTestId('language-en')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('language-ar-EG')).toHaveAccessibleName('العربية المصرية');
+    expect(screen.getByTestId('language-it')).toHaveAccessibleName('Italiano');
+    expect(screen.getByTestId('language-el')).toHaveAccessibleName('Ελληνικά');
+    expect(screen.getByTestId('language-fr')).toHaveAccessibleName('Français');
+    expect(screen.getByTestId('flag-en')).toHaveAttribute('data-icon-source', 'fallback');
+    expect(screen.queryByTestId('logout-button')).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByTestId('language-it'));
+    expect(screen.getByTestId('language-it')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('language-en')).toHaveAttribute('aria-pressed', 'false');
+    useLocaleStore.setState({ locale: 'en' });
+  });
+});
 
 describe('GatePage — unauthenticated', () => {
   it('renders four independent digit dials, each starting at 0', async () => {
@@ -63,6 +95,38 @@ describe('GatePage — unauthenticated', () => {
     await user.click(increaseButtons[0]!);
     const dials = screen.getAllByRole('spinbutton');
     expect(dials[0]).toHaveAttribute('aria-valuenow', '1');
+  });
+
+  it('renders the real closed-Gate background once registered/enabled, via the public pre-Gate endpoint', async () => {
+    renderGate({
+      preGateContentResult: {
+        ok: true,
+        appName: "Veoulla's World",
+        languages: [],
+        dialogue: [],
+        uiText: [],
+        assets: [
+          {
+            assetId: 'gate_closed_bg',
+            assetType: 'image',
+            version: 1,
+            preloadPriority: 1,
+            hasMobileVariant: true,
+            hasPosterVariant: false,
+            mediaRef: '/api/public-media/gate_closed_bg?v=1',
+          },
+        ],
+      },
+    });
+
+    const background = await screen.findByTestId('gate-closed-background');
+    expect(background).toHaveAttribute('src', '/api/public-media/gate_closed_bg?v=1');
+  });
+
+  it('renders no background image when gate_closed_bg is not registered yet (default)', async () => {
+    renderGate();
+    await screen.findByRole('group', { name: /four-digit gate code/i });
+    expect(screen.queryByTestId('gate-closed-background')).not.toBeInTheDocument();
   });
 
   it('shows generic invalid feedback on a wrong code without leaking the correct one', async () => {
@@ -172,7 +236,7 @@ describe('GatePage — unauthenticated', () => {
 
     await user.keyboard('1234{Enter}');
 
-    expect(await screen.findByText(/access granted/i)).toBeInTheDocument();
+    expect(await screen.findByTestId('doors-opening-transition')).toBeInTheDocument();
     expect(gateCallCount(fetchMock)).toBe(1);
   });
 
@@ -233,12 +297,12 @@ describe('GatePage — unauthenticated', () => {
     await screen.findByRole('group', { name: /four-digit gate code/i });
 
     await user.keyboard('1234{Enter}');
-    expect(screen.getByRole('button', { name: /checking/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /loading/i })).toBeInTheDocument();
 
     await user.keyboard('{Enter}');
     releaseGate();
 
-    expect(await screen.findByText(/access granted/i)).toBeInTheDocument();
+    expect(await screen.findByTestId('doors-opening-transition')).toBeInTheDocument();
     expect(gateCallCount(fetchMock)).toBe(1);
   });
 
@@ -307,27 +371,29 @@ describe('GatePage — unauthenticated', () => {
 });
 
 describe('GatePage — successful login', () => {
-  it('shows access granted, the M03 Content Runtime Lab, and a logout control — never the old World-loading placeholder', async () => {
+  it('opens the immersive flow without labs or an access banner, retaining discreet settings', async () => {
     renderGate();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: /enter/i }));
 
-    expect(await screen.findByText(/access granted/i)).toBeInTheDocument();
-    expect(await screen.findByTestId('content-runtime-lab')).toBeInTheDocument();
+    expect(await screen.findByTestId('doors-opening-transition')).toBeInTheDocument();
+    expect(screen.queryByTestId('content-runtime-lab')).not.toBeInTheDocument();
+    expect(screen.queryByText(/access granted|Engineering Labs/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/world loading/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /log out/i })).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^language-/)).toHaveLength(5);
   });
 
   it('resumes an existing valid owner session on load without requiring re-entry', async () => {
     renderGate({ ownerSession: 'authenticated' });
 
-    expect(await screen.findByText(/access granted/i)).toBeInTheDocument();
+    expect(await screen.findByTestId('beach-arrival')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: /four-digit gate code/i })).not.toBeInTheDocument();
   });
 
   it('logging out returns to the Gate dial entry screen', async () => {
     renderGate({ ownerSession: 'authenticated' });
-    await screen.findByText(/access granted/i);
+    await screen.findByTestId('beach-arrival');
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /log out/i }));

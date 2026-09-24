@@ -295,7 +295,7 @@ describe('Admin authorization middleware on /api/admin/schema-health', () => {
     const cookie = await loginAdmin(app);
     const res = await request(app).get('/api/admin/schema-health').set('Cookie', cookie);
     expect(res.status).toBe(200);
-    expect(res.body.summary.expectedTabCount).toBe(42);
+    expect(res.body.summary.expectedTabCount).toBe(44);
   });
 
   it('never exposes session row or Admin user data in a rejection', async () => {

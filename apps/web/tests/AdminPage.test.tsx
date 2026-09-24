@@ -48,7 +48,7 @@ describe('AdminPage — unauthenticated', () => {
     expect(passwordInput.value).toBe('');
   });
 
-  it('logs in successfully and shows the Schema Health view', async () => {
+  it('logs in successfully and shows the Admin dashboard by default', async () => {
     renderAdmin();
 
     const user = userEvent.setup();
@@ -56,25 +56,34 @@ describe('AdminPage — unauthenticated', () => {
     await user.type(screen.getByLabelText(/password/i), 'correct-password');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-    expect(await screen.findByRole('heading', { name: 'Admin Schema Health' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Admin' })).toBeInTheDocument();
     expect(screen.getByText(/signed in as admin_ahmed/i)).toBeInTheDocument();
+    expect(await screen.findByText('Server time')).toBeInTheDocument();
   });
 });
 
 describe('AdminPage — already authenticated', () => {
-  it('shows the schema health summary directly (session resumed from cookie)', async () => {
+  it('shows the dashboard directly (session resumed from cookie)', async () => {
     renderAdmin({ adminSession: 'authenticated' });
 
-    expect(await screen.findByRole('heading', { name: 'Admin Schema Health' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Admin' })).toBeInTheDocument();
     expect(screen.getByText(/signed in as admin_ahmed/i)).toBeInTheDocument();
-    expect(await screen.findByText('Expected tabs')).toBeInTheDocument();
-    expect(screen.getAllByText('42').length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByText('Server time')).toBeInTheDocument();
+    expect(screen.getByText('Active sessions')).toBeInTheDocument();
   });
 
-  it('renders the tab table and diagnostics list, and never shows raw sensitive values', async () => {
-    renderAdmin({ adminSession: 'authenticated' });
+  async function openSchemaHealthTab(user: ReturnType<typeof userEvent.setup>) {
+    await screen.findByRole('button', { name: 'Dashboard' });
+    await user.click(screen.getByRole('button', { name: 'Schema Health' }));
+    await screen.findByText('Expected tabs');
+  }
 
-    expect(await screen.findByRole('columnheader', { name: 'Tab' })).toBeInTheDocument();
+  it('renders the tab table and diagnostics list under the Schema Health tab, and never shows raw sensitive values', async () => {
+    renderAdmin({ adminSession: 'authenticated' });
+    const user = userEvent.setup();
+    await openSchemaHealthTab(user);
+
+    expect(screen.getByRole('columnheader', { name: 'Tab' })).toBeInTheDocument();
     expect(screen.getByRole('rowheader', { name: '01_APP_CONFIG' })).toBeInTheDocument();
     expect(screen.getByText(/placeholder value/i)).toBeInTheDocument();
 
@@ -86,17 +95,20 @@ describe('AdminPage — already authenticated', () => {
 
   it('filters the tab table by search text', async () => {
     renderAdmin({ adminSession: 'authenticated' });
+    const user = userEvent.setup();
+    await openSchemaHealthTab(user);
     await screen.findByRole('rowheader', { name: '01_APP_CONFIG' });
 
-    const user = userEvent.setup();
     await user.type(screen.getByLabelText(/search tabs/i), '10_ASSETS');
 
     expect(screen.queryByRole('rowheader', { name: '01_APP_CONFIG' })).not.toBeInTheDocument();
     expect(screen.getByRole('rowheader', { name: '10_ASSETS' })).toBeInTheDocument();
   });
 
-  it('has a bypass-cache refresh control', async () => {
+  it('has a bypass-cache refresh control on the Schema Health tab', async () => {
     renderAdmin({ adminSession: 'authenticated' });
+    const user = userEvent.setup();
+    await openSchemaHealthTab(user);
     expect(
       await screen.findByRole('button', { name: /bypass cache and refresh/i }),
     ).toBeInTheDocument();
@@ -104,12 +116,31 @@ describe('AdminPage — already authenticated', () => {
 
   it('logging out returns to the Admin login form', async () => {
     renderAdmin({ adminSession: 'authenticated' });
-    await screen.findByRole('heading', { name: 'Admin Schema Health' });
+    await screen.findByRole('heading', { name: 'Admin' });
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /log out/i }));
 
     expect(await screen.findByRole('heading', { name: 'Admin' })).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+  });
+
+  it('shows the entry-log viewer under the Logs tab', async () => {
+    renderAdmin({ adminSession: 'authenticated' });
+    const user = userEvent.setup();
+    await screen.findByRole('button', { name: 'Dashboard' });
+    await user.click(screen.getByRole('button', { name: 'Entry Logs' }));
+    expect(await screen.findByText(/matching event/i)).toBeInTheDocument();
+    expect(screen.getByText('page_open')).toBeInTheDocument();
+  });
+
+  it('looks up a player under the Players tab', async () => {
+    renderAdmin({ adminSession: 'authenticated' });
+    const user = userEvent.setup();
+    await screen.findByRole('button', { name: 'Dashboard' });
+    await user.click(screen.getByRole('button', { name: 'Players' }));
+    await user.type(screen.getByLabelText(/player user id/i), 'veoulla');
+    await user.click(screen.getByRole('button', { name: 'Look up' }));
+    expect(await screen.findByText('Veoulla')).toBeInTheDocument();
   });
 });

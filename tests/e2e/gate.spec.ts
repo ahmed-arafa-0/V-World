@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { skipGateOpening } from './helpers/preGate';
 
 /**
  * Gate coverage against the real Sheet (via the local Firebase emulators —
@@ -23,11 +24,53 @@ async function enterDigits(page: Page, digits: string) {
   }
 }
 
-test.describe('Gate — initial render and interaction', () => {
-  test('shows the Gate with four digit dials, all starting at 0', async ({ page }) => {
+test.describe('Gate — pre-Gate opening sequence (black → title → unseen VAR → reveal)', () => {
+  test('plays once, against the real (public) pre-gate content endpoint, then reveals the dials', async ({
+    page,
+  }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: "Veoulla's World" })).toBeVisible();
+    await expect(page.getByTestId('pre-gate-sequence')).toHaveAttribute('data-phase', 'opening');
+    await expect(page.getByTestId('var-reveal-placeholder')).toHaveCount(0);
+
+    await page.getByTestId('pre-gate-continue').click();
+    await expect(page.getByTestId('pre-gate-sequence')).toHaveAttribute('data-phase', 'title');
+    await expect(page.getByTestId('pre-gate-title')).not.toBeEmpty();
+
+    await page.getByTestId('pre-gate-continue').click();
+    await expect(page.getByTestId('pre-gate-sequence')).toHaveAttribute('data-phase', 'unseen');
+    // Real narration text from the live Sheet's dlg_gate_01 — never empty.
+    await expect(page.getByTestId('dialogue-text-line')).not.toBeEmpty();
+
+    await page.getByTestId('pre-gate-continue').click();
+    await expect(page.getByTestId('pre-gate-sequence')).toHaveAttribute('data-phase', 'reveal');
+    await expect(page.getByTestId('var-reveal-placeholder')).toBeVisible();
+
+    await page.getByTestId('pre-gate-continue').click();
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+  });
+
+  test('does not replay after the dials are reached once in this tab (sessionStorage)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByTestId('pre-gate-continue').click();
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
+    await expect(page.getByTestId('pre-gate-sequence')).toHaveCount(0);
+  });
+});
+
+test.describe('Gate — initial render and interaction', () => {
+  test.beforeEach(async ({ page }) => {
+    await skipGateOpening(page);
+  });
+
+  test('shows the Gate with four digit dials, all starting at 0', async ({ page }) => {
+    await page.goto('/');
+    // The immersive Gate has no page heading (Phase 1 presentation decision); the dials are the landmark.
     await expect(page.getByRole('group', { name: /four-digit gate code/i })).toBeVisible();
 
     const dials = page.getByRole('spinbutton');
@@ -116,6 +159,9 @@ test.describe('Gate — initial render and interaction', () => {
 
 test.describe('Gate — successful owner login (requires E2E_GATE_CODE)', () => {
   test.skip(!REAL_GATE_CODE, 'E2E_GATE_CODE is not set in this environment');
+  test.beforeEach(async ({ page }) => {
+    await skipGateOpening(page);
+  });
 
   test('correct code grants access, refresh resumes the session, and logout returns to the Gate', async ({
     page,

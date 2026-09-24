@@ -11,8 +11,10 @@ const SAMPLE_TEXT_IDS = ['content_lab_title', 'content_lab_incomplete'];
 
 /**
  * M03-A technical validation screen: the first real localization/direction/
- * icon/asset/voice-over runtime, replacing the M02 "Access granted / World
- * loading" placeholder. Every piece of localized or Sheet-driven content
+ * icon/asset runtime, replacing the M02 "Access granted / World loading"
+ * placeholder. Narration/dialogue is text-only (Ahmed's 2026-09-17 decision
+ * removed voice-over entirely — see the dedicated `NarrativeRuntimeLab` and
+ * CLAUDE.md). Every piece of localized or Sheet-driven content
  * here comes from `/api/content/runtime` — only structural chrome (section
  * headings, button labels) is hardcoded, matching the existing Admin
  * Schema Health screen's precedent. Not a world scene.
@@ -53,7 +55,7 @@ export function ContentRuntimeLab() {
     );
   }
 
-  const { uiText, dialogue, icons, assets, voiceover, diagnostics } = state.data;
+  const { uiText, dialogue, icons, assets, diagnostics } = state.data;
   const dialogueLine =
     dialogue.find((d) => d.locale === locale) ?? dialogue.find((d) => d.locale === 'en');
 
@@ -151,22 +153,14 @@ export function ContentRuntimeLab() {
         </ul>
       </section>
 
-      <section aria-label="Asset and voice-over status" className={styles.section}>
-        <h3 className={styles.sectionTitle}>Asset &amp; voice-over metadata (status only)</h3>
+      <section aria-label="Asset status" className={styles.section}>
+        <h3 className={styles.sectionTitle}>Asset metadata (status only)</h3>
         <ul className={styles.statusList} data-testid="asset-status-list">
           {assets.map((asset) => (
             <li key={asset.assetId}>
               {asset.assetId} — v{asset.version}, preload {asset.preloadPriority}
               {asset.hasMobileVariant ? ', has mobile variant' : ''}
               {asset.hasPosterVariant ? ', has poster variant' : ''}
-            </li>
-          ))}
-        </ul>
-        <ul className={styles.statusList} data-testid="voiceover-status-list">
-          {voiceover.map((vo) => (
-            <li key={vo.voiceoverId}>
-              {vo.voiceoverId} — {vo.locale}, {vo.durationMs}ms
-              {vo.captionText ? ', caption available' : ', no caption'}
             </li>
           ))}
         </ul>

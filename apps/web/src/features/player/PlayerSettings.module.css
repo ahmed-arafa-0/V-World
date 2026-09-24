@@ -1,0 +1,101 @@
+.cluster {
+  position: fixed;
+  z-index: 20;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff7e9;
+}
+.flags {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--ctl-backing);
+  border: 1.5px solid var(--ctl-bronze);
+  backdrop-filter: blur(3px);
+}
+.flag {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.72;
+  transition:
+    opacity 0.15s,
+    transform 0.12s;
+}
+.flag:hover {
+  opacity: 1;
+}
+.flag[aria-pressed='true'] {
+  opacity: 1;
+  border-color: #ffe2a1;
+  box-shadow: 0 0 8px rgb(255 226 161 / 60%);
+}
+.flagImg {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+.logout {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ctl-ink);
+  background: var(--ctl-backing);
+  border: 1.5px solid var(--ctl-bronze);
+  box-shadow: 0 2px 10px rgb(23 17 11 / 38%);
+  cursor: pointer;
+}
+.logout:hover {
+  background: var(--ctl-backing-hover);
+  border-color: var(--ctl-bronze-hover);
+}
+.icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+}
+.cluster :focus-visible {
+  outline: 3px solid #ffe2a1;
+  outline-offset: 2px;
+}
+@media (max-width: 480px) {
+  .cluster {
+    gap: 5px;
+  }
+  .flags {
+    gap: 2px;
+    padding: 3px;
+  }
+  .flag {
+    width: 30px;
+    height: 30px;
+  }
+  .flagImg {
+    width: 22px;
+    height: 22px;
+  }
+  .logout {
+    width: 38px;
+    height: 38px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flag {
+    transition: none;
+  }
+}

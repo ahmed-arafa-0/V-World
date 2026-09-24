@@ -1,0 +1,32 @@
+.panel,
+.bare {
+  position: absolute;
+  z-index: 3;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  color: #fff6e4;
+}
+.panel {
+  width: min(560px, calc(100% - 32px));
+  padding: 18px 24px;
+  border-radius: 14px;
+  background: #111c26e6;
+  text-align: center;
+}
+.button {
+  min-height: 48px;
+  padding: 10px 28px;
+  border: 1px solid #fff8;
+  border-radius: 28px;
+  color: inherit;
+  background: #17262bd9;
+  cursor: pointer;
+}
+.button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}

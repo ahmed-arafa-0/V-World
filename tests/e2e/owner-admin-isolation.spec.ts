@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { skipGateOpening } from './helpers/preGate';
 
 /**
  * Proves owner (Gate) and Admin authentication are fully independent —
@@ -18,6 +19,7 @@ test.describe('Owner/Admin session isolation', () => {
 
   test('an owner (Gate) login does not grant Admin access, and vice versa', async ({ page }) => {
     // Owner login only — Admin surface must still require its own login.
+    await skipGateOpening(page);
     await page.goto('/');
     const digits = REAL_GATE_CODE!.trim();
     for (let i = 0; i < digits.length; i++) {

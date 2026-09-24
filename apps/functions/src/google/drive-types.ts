@@ -34,6 +34,25 @@ export interface GoogleDriveClient {
   getFileMetadata(fileId: string): Promise<DriveFileMetadata>;
   /** Fetches file content, honoring an optional inclusive byte range. Never buffers the full file in memory. */
   getFileContentStream(fileId: string, range?: DriveByteRange): Promise<DriveContentStreamResult>;
+  /**
+   * Read-only exact-name search (`drive.readonly` already permits
+   * `files.list`, not only `files.get`) — every non-trashed file anywhere
+   * the service account can see with this exact `name`, regardless of
+   * folder. Callers are responsible for proving containment under the
+   * approved asset root (`DriveGateway.isUnderRoot`/`findUniqueUnderRoot`)
+   * before trusting any result — a same-named file could legitimately exist
+   * outside the root. Never a write/upload capability.
+   */
+  findFilesByName(name: string): Promise<DriveFileMetadata[]>;
+  /**
+   * Read-only listing of a folder's direct (non-trashed) children — the same
+   * `drive.readonly` scope that already permits `findFilesByName`. Callers
+   * are still responsible for proving the folder itself lives under the
+   * approved asset root before trusting any result, exactly as with
+   * `findFilesByName`. Never a write/upload capability.
+   */
+  listFilesInFolder(folderId: string): Promise<DriveFileMetadata[]>;
 }
 
 export const DRIVE_SHORTCUT_MIME_TYPE = 'application/vnd.google-apps.shortcut';
+export const DRIVE_FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';

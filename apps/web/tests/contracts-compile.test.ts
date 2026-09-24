@@ -73,9 +73,9 @@ describe('shared contracts compile and are usable from the frontend', () => {
       ok: true,
       summary: {
         status: 'healthy',
-        expectedTabCount: 42,
-        foundTabCount: 42,
-        healthyTabCount: 42,
+        expectedTabCount: 44,
+        foundTabCount: 44,
+        healthyTabCount: 44,
         errorCount: 0,
         warningCount: 0,
         infoCount: 0,
@@ -86,7 +86,7 @@ describe('shared contracts compile and are usable from the frontend', () => {
       note: 'M02 protection required',
     };
 
-    expect(schemaHealth.summary.expectedTabCount).toBe(42);
+    expect(schemaHealth.summary.expectedTabCount).toBe(44);
   });
 
   it('builds a valid SafeSessionSummary using the shared type (never a session ID, Gate code, or password)', () => {

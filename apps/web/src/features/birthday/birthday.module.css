@@ -1,0 +1,326 @@
+.overlayBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 10, 30, 0.55);
+  padding: 16px;
+}
+
+.overlayCard {
+  position: relative;
+  max-width: 480px;
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #fff8ec;
+  color: #2a1a3a;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.greeting {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  color: #6b3fa0;
+  margin: 8px 0;
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.countdownLabel {
+  font-weight: 600;
+  color: #6b3fa0;
+}
+
+.countdownNumber {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #d4af37;
+}
+
+.replayBadge {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ece1ff;
+  color: #6b3fa0;
+}
+
+.temporaryVisual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  border: 1px dashed #b79ad6;
+  border-radius: 12px;
+  color: #6b3fa0;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 12px;
+}
+
+.gardenStage,
+.cakeStage {
+  position: relative;
+  min-height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f1e6ff;
+}
+
+.cakeStage {
+  aspect-ratio: 1 / 1;
+}
+
+.gardenImage,
+.cakeImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Cat and Marcelino: separate sprite layers grounded on the garden floor, clear of the empty
+ * central table (where the cake appears in the next step) and of any UI controls. */
+.gardenCat,
+.gardenMarcelino {
+  position: absolute;
+  bottom: 4%;
+  width: 15%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.gardenCat {
+  inset-inline-start: 16%;
+  transform: translateX(-50%);
+}
+
+.gardenMarcelino {
+  inset-inline-end: 16%;
+  transform: translateX(50%);
+}
+
+.gardenSpriteImg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.gardenCaption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b3fa0;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* Three candle bodies, each with its own flame overlay, anchored by CANDLE_ANCHORS on the cake's
+ * back/top icing. `left`/`top` (the candle's base) are set inline per instance. */
+.candleSlot {
+  position: absolute;
+  width: 3.5%;
+  transform: translate(-50%, -100%);
+}
+
+.candleBody {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.candleBodyFallback {
+  display: block;
+  font-size: 1.6rem;
+  text-align: center;
+}
+
+.candleFlameImg {
+  position: absolute;
+  left: 50%;
+  bottom: 95%;
+  width: 175%;
+  transform: translate(-50%, 15%);
+  pointer-events: none;
+}
+
+.candleFlameFallback {
+  position: absolute;
+  left: 50%;
+  bottom: 95%;
+  transform: translate(-50%, 0);
+  font-size: 1.4rem;
+  pointer-events: none;
+}
+
+.extinguishButton {
+  position: absolute;
+  bottom: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  border: 1px solid #d8c4f0;
+  background: #fff;
+  color: #6b3fa0;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.extinguishButton:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.giftIcon {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-inline-end: 8px;
+}
+
+/* The persistent birthday-entry control (a small floating button, like the Map/Achievements
+ * buttons) — accessible even mid-first-journey, hidden only under the same Church/active-game
+ * deferral as the automatic invitation. */
+.entryButton {
+  position: fixed;
+  bottom: 16px;
+  inset-inline-end: 16px;
+  z-index: 480;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #fff8ec;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.wishInput {
+  width: 100%;
+  min-height: 80px;
+  border-radius: 10px;
+  border: 1px solid #d8c4f0;
+  padding: 10px;
+  font: inherit;
+  resize: vertical;
+}
+
+.letterTitle {
+  font-size: 1.15rem;
+  color: #6b3fa0;
+  margin: 0;
+}
+
+.letterBody {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.giftList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.giftList li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f1e6ff;
+}
+
+/* Confetti: bounded particles, pointer-events: none throughout, auto-cleaned by the component. */
+.confettiField {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confettiPiece {
+  animation-name: birthdayConfettiFall;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+}
+
+@keyframes birthdayConfettiFall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift, 0), 110vh) rotate(240deg);
+  }
+}
+
+.confettiReduced {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(212, 175, 55, 0.35),
+    rgba(138, 92, 246, 0.2) 60%,
+    transparent 80%
+  );
+  opacity: 0.45;
+}
+
+@keyframes birthdayGlowFade {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confettiPiece {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

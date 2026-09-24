@@ -1,0 +1,21 @@
+.journey,
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.journey {
+  outline: none;
+}
+.viewport {
+  background: #151820;
+  touch-action: pan-y;
+}
+.debugOverlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 1rem;
+  background: #000b;
+  color: #fff;
+}

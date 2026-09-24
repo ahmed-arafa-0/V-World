@@ -22,7 +22,7 @@ describe('computeContentRuntime', () => {
     expect(byLocale.get('fr')?.direction).toBe('ltr');
   });
 
-  it('never surfaces a disabled row from any of the six content tabs', async () => {
+  it('never surfaces a disabled row from any of the five content tabs this runtime reads', async () => {
     const response = await computeContentRuntime(makeGateway());
     const serialized = JSON.stringify(response);
     expect(serialized).not.toContain('content_lab_disabled');
@@ -84,32 +84,32 @@ describe('computeContentRuntime', () => {
     expect(map?.rtlMirror).toBe(false);
   });
 
-  it('flags a voiceover referencing a missing asset and resolves its mediaRef to null', async () => {
+  it('never exposes a voiceover field at all (Ahmed 2026-09-17: narration/dialogue is text-only)', async () => {
     const response = await computeContentRuntime(makeGateway());
-    const broken = response.voiceover.find((v) => v.voiceoverId === 'vo_broken_asset');
-    expect(broken?.mediaRef).toBeNull();
-    const diagnostic = response.diagnostics.find(
-      (d) => d.code === 'INVALID_VOICEOVER_ASSET_REFERENCE' && d.subjectId === 'vo_broken_asset',
-    );
-    expect(diagnostic).toBeDefined();
+    expect(response).not.toHaveProperty('voiceover');
+    const serialized = JSON.stringify(response);
+    expect(serialized).not.toContain('voiceoverMediaRef');
+    // asset_vo_boot_en/asset_vo_boot_ar are 10_ASSETS rows (still valid,
+    // reusable audio asset metadata — e.g. for future music/SFX) and are
+    // expected to still appear in `assets`; only the 16_VOICEOVER-derived
+    // voiceover ID itself must never surface.
+    expect(serialized).not.toContain('vo_broken_asset');
+    expect(serialized).not.toContain('"voiceoverId"');
   });
 
-  it('flags a dialogue line referencing a missing voiceover and resolves voiceoverMediaRef to null', async () => {
+  it('never diagnoses voiceover-specific codes — 16_VOICEOVER is not read by this runtime', async () => {
     const response = await computeContentRuntime(makeGateway());
-    const broken = response.dialogue.find((d) => d.dialogueRowId === 'dlg_broken_voiceover_en');
-    expect(broken?.voiceoverMediaRef).toBeNull();
-    const diagnostic = response.diagnostics.find(
-      (d) =>
-        d.code === 'INVALID_DIALOGUE_VOICEOVER_REFERENCE' &&
-        d.subjectId === 'dlg_broken_voiceover_en',
-    );
-    expect(diagnostic).toBeDefined();
+    const codes = response.diagnostics.map((d) => d.code);
+    expect(codes).not.toContain('INVALID_VOICEOVER_ASSET_REFERENCE');
+    expect(codes).not.toContain('INVALID_DIALOGUE_VOICEOVER_REFERENCE');
   });
 
-  it('resolves a dialogue line voiceoverMediaRef when the reference is valid', async () => {
+  it('resolves a dialogue line purely as text, with no audio reference of any kind', async () => {
     const response = await computeContentRuntime(makeGateway());
     const line = response.dialogue.find((d) => d.dialogueRowId === 'dlg_boot_en');
-    expect(line?.voiceoverMediaRef).toBe('/api/media/asset_vo_boot_en?v=1');
+    expect(line?.text).toBeTruthy();
+    expect(line).not.toHaveProperty('voiceoverMediaRef');
+    expect(line).not.toHaveProperty('voiceoverDurationMs');
   });
 
   it('reports status-only asset metadata, never a raw or placeholder Drive file ID', async () => {

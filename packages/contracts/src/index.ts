@@ -56,7 +56,6 @@ export {
   type RuntimeLanguage,
   type RuntimeUiTextEntry,
   type RuntimeDialogueLine,
-  type RuntimeVoiceoverEntry,
   type RuntimeIconEntry,
   type RuntimeAssetStatus,
   type ContentDiagnosticCode,
@@ -64,3 +63,9 @@ export {
   type ContentRuntimeResponse,
 } from './content-runtime.js';
 export { MEDIA_VARIANTS, isMediaVariant, type MediaVariant } from './media.js';
+export type { DevMapPreviewResponse } from './dev-map-preview.js';
+export type { PreGateContentResponse } from './pre-gate-content.js';
+export type * from './world.js';
+export { WORLD_UI_TEXT, type WorldTextKey, type WorldLabel } from './world-ui-text.js';
+export { CANONICAL_GENDERS, readStoredGender, type CanonicalGender } from './world.js';
+export type * from './admin.js';

@@ -41,3 +41,22 @@ describe('withRetry', () => {
     expect(fn).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('withRetry rate limits', () => {
+  it('waits for a 429 (a 50 ms retry only spends more quota) but stays bounded, then surfaces the failure', async () => {
+    vi.useFakeTimers();
+    try {
+      const fn = vi
+        .fn()
+        .mockRejectedValue(new AppError('SHEET_RATE_LIMITED', 'limited', { retryable: true }));
+      const outcome = withRetry(fn, { maxAttempts: 3 }).catch((e: unknown) => e);
+      await vi.advanceTimersByTimeAsync(400);
+      expect(fn).toHaveBeenCalledTimes(1); // still backing off, not hammering
+      await vi.advanceTimersByTimeAsync(4000); // well beyond 1 s + 2 s (+ jitter)
+      expect(fn).toHaveBeenCalledTimes(3);
+      expect(await outcome).toMatchObject({ code: 'SHEET_RATE_LIMITED' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

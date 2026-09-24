@@ -1,7 +1,7 @@
 import { AppError } from '../errors/app-error.js';
 
 interface GoogleApiErrorLike {
-  code?: number;
+  code?: number | string;
   response?: { status?: number };
   message?: string;
 }
@@ -9,6 +9,17 @@ interface GoogleApiErrorLike {
 function extractStatus(err: unknown): number | undefined {
   const e = err as GoogleApiErrorLike;
   return e?.response?.status ?? (typeof e?.code === 'number' ? e.code : undefined);
+}
+
+/** A request that never got an answer (timeout, reset, DNS): the outcome upstream is unknown. */
+export function isTransportTimeout(err: unknown): boolean {
+  const e = err as GoogleApiErrorLike & { name?: string };
+  if (extractStatus(err) !== undefined) return false;
+  return (
+    ['ETIMEDOUT', 'ECONNABORTED', 'ECONNRESET', 'ESOCKETTIMEDOUT', 'EAI_AGAIN'].includes(
+      String(e?.code),
+    ) || e?.name === 'AbortError'
+  );
 }
 
 /**
@@ -38,6 +49,11 @@ export function mapGoogleError(err: unknown): AppError {
   }
   if (status !== undefined && status >= 500) {
     return new AppError('SHEET_UNAVAILABLE', 'The Google Sheets API is temporarily unavailable.', {
+      retryable: true,
+    });
+  }
+  if (isTransportTimeout(err)) {
+    return new AppError('SHEET_UNAVAILABLE', 'The Google Sheets API did not answer in time.', {
       retryable: true,
     });
   }

@@ -104,4 +104,16 @@ export class FakeGoogleDriveClient implements GoogleDriveClient {
     const slice = range ? file.content.subarray(range.start, range.end + 1) : file.content;
     return { stream: Readable.from(slice) };
   }
+
+  async findFilesByName(name: string): Promise<DriveFileMetadata[]> {
+    return Object.values(this.files)
+      .map((f) => f.metadata)
+      .filter((m) => m.name === name && !m.trashed);
+  }
+
+  async listFilesInFolder(folderId: string): Promise<DriveFileMetadata[]> {
+    return Object.values(this.files)
+      .map((f) => f.metadata)
+      .filter((m) => m.parents.includes(folderId) && !m.trashed);
+  }
 }
